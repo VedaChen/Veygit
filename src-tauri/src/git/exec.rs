@@ -52,6 +52,14 @@ impl Git {
             .env("GIT_OPTIONAL_LOCKS", "0")
             .env("GIT_TERMINAL_PROMPT", "0")
             .env("GIT_PAGER", "cat");
+        // Windows：GUI（无控制台）父进程 spawn 子进程时默认会弹出黑窗，
+        // 加 CREATE_NO_WINDOW 抑制（安装版必须，否则每个 git 命令闪一个终端窗口）
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
+        }
         cmd
     }
 

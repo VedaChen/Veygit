@@ -1,6 +1,6 @@
 [package]
 name = "veygit"
-version = "0.1.0"
+version = "0.1.1"
 description = "Veygit - a VS Code-style Git panel desktop client"
 authors = ["VedaChen"]
 edition = "2024"
