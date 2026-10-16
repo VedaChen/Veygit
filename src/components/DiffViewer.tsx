@@ -4,6 +4,7 @@ import { languageFor, monaco } from '../monaco-setup';
 import { useStore } from '../store';
 import type { DiffContent } from '../types';
 import { absolutePath, copyText, splitPath } from '../util';
+import { MarkdownPreview } from './MarkdownPreview';
 import { Menu } from './Menu';
 import type { MenuEntry } from './Menu';
 
@@ -118,6 +119,8 @@ function DiffView({
   const { name } = splitPath(path);
   /** 文件的系统绝对路径（打开文件 / 复制路径 / 资源管理器定位共用） */
   const absolute = absolutePath(root, path);
+  /** Markdown 文件在预览模式下渲染为 HTML（对照 VS Code 的 markdown 预览） */
+  const isMarkdown = /\.(md|markdown)$/i.test(path);
 
   // 显示选项快照：切换预览导致 diff 编辑器重建时，用于恢复当前选项
   const displayOptionsRef = useRef({ showWhitespace, showMinimap, sideBySide });
@@ -316,7 +319,11 @@ function DiffView({
         </div>
       </div>
       {preview ? (
-        <FilePreview path={path} content={diff.modified} />
+        isMarkdown ? (
+          <MarkdownPreview content={diff.modified} />
+        ) : (
+          <FilePreview path={path} content={diff.modified} />
+        )
       ) : (
         <div className="diff-editor" ref={containerRef} />
       )}

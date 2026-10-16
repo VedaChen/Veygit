@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '@vscode/codicons/dist/codicon.css';
 import './theme.css';
+import './seti-icons.css';
 import './styles.css';
 import './monaco-setup';
 import App from './App';

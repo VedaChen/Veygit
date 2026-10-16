@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
+import { fileIconClass } from '../seti-icons';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import type { CommitInfo } from '../types';
@@ -374,7 +375,11 @@ function GraphList({
                         setCtxMenu({ x: e.clientX, y: e.clientY, path: f.path });
                       }}
                     >
-                      <i className="codicon codicon-file" />
+                      {fileIconClass(f.path) ? (
+                        <i className={`file-type-icon ${fileIconClass(f.path)}`} />
+                      ) : (
+                        <i className="codicon codicon-file" />
+                      )}
                       <span className="graph-file-name">{name}</span>
                       {/* 仓库名 • 路径（灰色小字，无路径时只显示仓库名） */}
                       <span className="graph-file-desc">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { confirm } from '@tauri-apps/plugin-dialog';
+import { fileIconClass } from '../seti-icons';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import {
@@ -225,7 +226,11 @@ function FileNode({
           setCtxMenu({ x: e.clientX, y: e.clientY });
         }}
       >
-        <i className="codicon codicon-file tree-icon file-icon" />
+        {fileIconClass(change.path) ? (
+          <i className={`file-type-icon tree-icon file-icon ${fileIconClass(change.path)}`} />
+        ) : (
+          <i className="codicon codicon-file tree-icon file-icon" />
+        )}
         <span className="tree-name" title={entry.name}>
           {entry.name}
         </span>

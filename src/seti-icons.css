@@ -1,0 +1,1931 @@
+/* 由 VS Code 内置 Seti 图标主题生成（vs-seti-icon-theme.json）——请勿手工修改 */
+@font-face {
+  font-family: 'seti';
+  src: url('/seti.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.file-type-icon {
+  font-family: 'seti';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.seti-_R_light::before {
+  content: '\E001';
+  color: #498ba7;
+}
+
+.seti-_R::before {
+  content: '\E001';
+  color: #519aba;
+}
+
+.seti-_argdown_light::before {
+  content: '\E003';
+  color: #498ba7;
+}
+
+.seti-_argdown::before {
+  content: '\E003';
+  color: #519aba;
+}
+
+.seti-_asm_light::before {
+  content: '\E004';
+  color: #b8383d;
+}
+
+.seti-_asm::before {
+  content: '\E004';
+  color: #cc3e44;
+}
+
+.seti-_audio_light::before {
+  content: '\E005';
+  color: #9068b0;
+}
+
+.seti-_audio::before {
+  content: '\E005';
+  color: #a074c4;
+}
+
+.seti-_babel_light::before {
+  content: '\E006';
+  color: #b7b73b;
+}
+
+.seti-_babel::before {
+  content: '\E006';
+  color: #cbcb41;
+}
+
+.seti-_bazel_light::before {
+  content: '\E007';
+  color: #7fae42;
+}
+
+.seti-_bazel::before {
+  content: '\E007';
+  color: #8dc149;
+}
+
+.seti-_bazel_1_light::before {
+  content: '\E007';
+  color: #455155;
+}
+
+.seti-_bazel_1::before {
+  content: '\E007';
+  color: #4d5a5e;
+}
+
+.seti-_bicep_light::before {
+  content: '\E008';
+  color: #498ba7;
+}
+
+.seti-_bicep::before {
+  content: '\E008';
+  color: #519aba;
+}
+
+.seti-_bower_light::before {
+  content: '\E009';
+  color: #cc6d2e;
+}
+
+.seti-_bower::before {
+  content: '\E009';
+  color: #e37933;
+}
+
+.seti-_bsl_light::before {
+  content: '\E00A';
+  color: #b8383d;
+}
+
+.seti-_bsl::before {
+  content: '\E00A';
+  color: #cc3e44;
+}
+
+.seti-_c_light::before {
+  content: '\E00C';
+  color: #498ba7;
+}
+
+.seti-_c::before {
+  content: '\E00C';
+  color: #519aba;
+}
+
+.seti-_c-sharp_light::before {
+  content: '\E00B';
+  color: #498ba7;
+}
+
+.seti-_c-sharp::before {
+  content: '\E00B';
+  color: #519aba;
+}
+
+.seti-_c_1_light::before {
+  content: '\E00C';
+  color: #9068b0;
+}
+
+.seti-_c_1::before {
+  content: '\E00C';
+  color: #a074c4;
+}
+
+.seti-_c_2_light::before {
+  content: '\E00C';
+  color: #b7b73b;
+}
+
+.seti-_c_2::before {
+  content: '\E00C';
+  color: #cbcb41;
+}
+
+.seti-_cake_light::before {
+  content: '\E00D';
+  color: #b8383d;
+}
+
+.seti-_cake::before {
+  content: '\E00D';
+  color: #cc3e44;
+}
+
+.seti-_cake_php_light::before {
+  content: '\E00E';
+  color: #b8383d;
+}
+
+.seti-_cake_php::before {
+  content: '\E00E';
+  color: #cc3e44;
+}
+
+.seti-_clock_light::before {
+  content: '\E012';
+  color: #498ba7;
+}
+
+.seti-_clock::before {
+  content: '\E012';
+  color: #519aba;
+}
+
+.seti-_clock_1_light::before {
+  content: '\E012';
+  color: #627379;
+}
+
+.seti-_clock_1::before {
+  content: '\E012';
+  color: #6d8086;
+}
+
+.seti-_clojure_light::before {
+  content: '\E013';
+  color: #7fae42;
+}
+
+.seti-_clojure::before {
+  content: '\E013';
+  color: #8dc149;
+}
+
+.seti-_clojure_1_light::before {
+  content: '\E013';
+  color: #498ba7;
+}
+
+.seti-_clojure_1::before {
+  content: '\E013';
+  color: #519aba;
+}
+
+.seti-_code-climate_light::before {
+  content: '\E014';
+  color: #7fae42;
+}
+
+.seti-_code-climate::before {
+  content: '\E014';
+  color: #8dc149;
+}
+
+.seti-_code-search_light::before {
+  content: '\E015';
+  color: #9068b0;
+}
+
+.seti-_code-search::before {
+  content: '\E015';
+  color: #a074c4;
+}
+
+.seti-_coffee_light::before {
+  content: '\E016';
+  color: #b7b73b;
+}
+
+.seti-_coffee::before {
+  content: '\E016';
+  color: #cbcb41;
+}
+
+.seti-_coldfusion_light::before {
+  content: '\E018';
+  color: #498ba7;
+}
+
+.seti-_coldfusion::before {
+  content: '\E018';
+  color: #519aba;
+}
+
+.seti-_config_light::before {
+  content: '\E019';
+  color: #627379;
+}
+
+.seti-_config::before {
+  content: '\E019';
+  color: #6d8086;
+}
+
+.seti-_cpp_light::before {
+  content: '\E01A';
+  color: #498ba7;
+}
+
+.seti-_cpp::before {
+  content: '\E01A';
+  color: #519aba;
+}
+
+.seti-_cpp_1_light::before {
+  content: '\E01A';
+  color: #9068b0;
+}
+
+.seti-_cpp_1::before {
+  content: '\E01A';
+  color: #a074c4;
+}
+
+.seti-_cpp_2_light::before {
+  content: '\E01A';
+  color: #b7b73b;
+}
+
+.seti-_cpp_2::before {
+  content: '\E01A';
+  color: #cbcb41;
+}
+
+.seti-_crystal_light::before {
+  content: '\E01B';
+  color: #bfc2c1;
+}
+
+.seti-_crystal::before {
+  content: '\E01B';
+  color: #d4d7d6;
+}
+
+.seti-_crystal_embedded_light::before {
+  content: '\E01C';
+  color: #bfc2c1;
+}
+
+.seti-_crystal_embedded::before {
+  content: '\E01C';
+  color: #d4d7d6;
+}
+
+.seti-_css_light::before {
+  content: '\E01D';
+  color: #498ba7;
+}
+
+.seti-_css::before {
+  content: '\E01D';
+  color: #519aba;
+}
+
+.seti-_csv_light::before {
+  content: '\E01E';
+  color: #7fae42;
+}
+
+.seti-_csv::before {
+  content: '\E01E';
+  color: #8dc149;
+}
+
+.seti-_cu_light::before {
+  content: '\E01F';
+  color: #7fae42;
+}
+
+.seti-_cu::before {
+  content: '\E01F';
+  color: #8dc149;
+}
+
+.seti-_cu_1_light::before {
+  content: '\E01F';
+  color: #9068b0;
+}
+
+.seti-_cu_1::before {
+  content: '\E01F';
+  color: #a074c4;
+}
+
+.seti-_d_light::before {
+  content: '\E020';
+  color: #b8383d;
+}
+
+.seti-_d::before {
+  content: '\E020';
+  color: #cc3e44;
+}
+
+.seti-_dart_light::before {
+  content: '\E021';
+  color: #498ba7;
+}
+
+.seti-_dart::before {
+  content: '\E021';
+  color: #519aba;
+}
+
+.seti-_db_light::before {
+  content: '\E022';
+  color: #dd4b78;
+}
+
+.seti-_db::before {
+  content: '\E022';
+  color: #f55385;
+}
+
+.seti-_db_1_light::before {
+  content: '\E022';
+  color: #498ba7;
+}
+
+.seti-_db_1::before {
+  content: '\E022';
+  color: #519aba;
+}
+
+.seti-_default_light::before {
+  content: '\E023';
+  color: #bfc2c1;
+}
+
+.seti-_default::before {
+  content: '\E023';
+  color: #d4d7d6;
+}
+
+.seti-_docker_light::before {
+  content: '\E025';
+  color: #498ba7;
+}
+
+.seti-_docker::before {
+  content: '\E025';
+  color: #519aba;
+}
+
+.seti-_docker_1_light::before {
+  content: '\E025';
+  color: #455155;
+}
+
+.seti-_docker_1::before {
+  content: '\E025';
+  color: #4d5a5e;
+}
+
+.seti-_docker_2_light::before {
+  content: '\E025';
+  color: #7fae42;
+}
+
+.seti-_docker_2::before {
+  content: '\E025';
+  color: #8dc149;
+}
+
+.seti-_docker_3_light::before {
+  content: '\E025';
+  color: #dd4b78;
+}
+
+.seti-_docker_3::before {
+  content: '\E025';
+  color: #f55385;
+}
+
+.seti-_ejs_light::before {
+  content: '\E027';
+  color: #b7b73b;
+}
+
+.seti-_ejs::before {
+  content: '\E027';
+  color: #cbcb41;
+}
+
+.seti-_elixir_light::before {
+  content: '\E028';
+  color: #9068b0;
+}
+
+.seti-_elixir::before {
+  content: '\E028';
+  color: #a074c4;
+}
+
+.seti-_elixir_script_light::before {
+  content: '\E029';
+  color: #9068b0;
+}
+
+.seti-_elixir_script::before {
+  content: '\E029';
+  color: #a074c4;
+}
+
+.seti-_elm_light::before {
+  content: '\E02A';
+  color: #498ba7;
+}
+
+.seti-_elm::before {
+  content: '\E02A';
+  color: #519aba;
+}
+
+.seti-_eslint_light::before {
+  content: '\E02C';
+  color: #9068b0;
+}
+
+.seti-_eslint::before {
+  content: '\E02C';
+  color: #a074c4;
+}
+
+.seti-_eslint_1_light::before {
+  content: '\E02C';
+  color: #455155;
+}
+
+.seti-_eslint_1::before {
+  content: '\E02C';
+  color: #4d5a5e;
+}
+
+.seti-_ethereum_light::before {
+  content: '\E02D';
+  color: #498ba7;
+}
+
+.seti-_ethereum::before {
+  content: '\E02D';
+  color: #519aba;
+}
+
+.seti-_f-sharp_light::before {
+  content: '\E02E';
+  color: #498ba7;
+}
+
+.seti-_f-sharp::before {
+  content: '\E02E';
+  color: #519aba;
+}
+
+.seti-_favicon_light::before {
+  content: '\E02F';
+  color: #b7b73b;
+}
+
+.seti-_favicon::before {
+  content: '\E02F';
+  color: #cbcb41;
+}
+
+.seti-_firebase_light::before {
+  content: '\E030';
+  color: #cc6d2e;
+}
+
+.seti-_firebase::before {
+  content: '\E030';
+  color: #e37933;
+}
+
+.seti-_firefox_light::before {
+  content: '\E031';
+  color: #cc6d2e;
+}
+
+.seti-_firefox::before {
+  content: '\E031';
+  color: #e37933;
+}
+
+.seti-_font_light::before {
+  content: '\E033';
+  color: #b8383d;
+}
+
+.seti-_font::before {
+  content: '\E033';
+  color: #cc3e44;
+}
+
+.seti-_git_light::before {
+  content: '\E034';
+  color: #3b4b52;
+}
+
+.seti-_git::before {
+  content: '\E034';
+  color: #41535b;
+}
+
+.seti-_github_light::before {
+  content: '\E037';
+  color: #bfc2c1;
+}
+
+.seti-_github::before {
+  content: '\E037';
+  color: #d4d7d6;
+}
+
+.seti-_gitlab_light::before {
+  content: '\E038';
+  color: #cc6d2e;
+}
+
+.seti-_gitlab::before {
+  content: '\E038';
+  color: #e37933;
+}
+
+.seti-_go_light::before {
+  content: '\E039';
+  color: #498ba7;
+}
+
+.seti-_go::before {
+  content: '\E039';
+  color: #519aba;
+}
+
+.seti-_go2_light::before {
+  content: '\E03A';
+  color: #498ba7;
+}
+
+.seti-_go2::before {
+  content: '\E03A';
+  color: #519aba;
+}
+
+.seti-_godot_light::before {
+  content: '\E03B';
+  color: #498ba7;
+}
+
+.seti-_godot::before {
+  content: '\E03B';
+  color: #519aba;
+}
+
+.seti-_godot_1_light::before {
+  content: '\E03B';
+  color: #b8383d;
+}
+
+.seti-_godot_1::before {
+  content: '\E03B';
+  color: #cc3e44;
+}
+
+.seti-_godot_2_light::before {
+  content: '\E03B';
+  color: #b7b73b;
+}
+
+.seti-_godot_2::before {
+  content: '\E03B';
+  color: #cbcb41;
+}
+
+.seti-_godot_3_light::before {
+  content: '\E03B';
+  color: #9068b0;
+}
+
+.seti-_godot_3::before {
+  content: '\E03B';
+  color: #a074c4;
+}
+
+.seti-_gradle_light::before {
+  content: '\E03C';
+  color: #498ba7;
+}
+
+.seti-_gradle::before {
+  content: '\E03C';
+  color: #519aba;
+}
+
+.seti-_grails_light::before {
+  content: '\E03D';
+  color: #7fae42;
+}
+
+.seti-_grails::before {
+  content: '\E03D';
+  color: #8dc149;
+}
+
+.seti-_graphql_light::before {
+  content: '\E03E';
+  color: #dd4b78;
+}
+
+.seti-_graphql::before {
+  content: '\E03E';
+  color: #f55385;
+}
+
+.seti-_grunt_light::before {
+  content: '\E03F';
+  color: #cc6d2e;
+}
+
+.seti-_grunt::before {
+  content: '\E03F';
+  color: #e37933;
+}
+
+.seti-_gulp_light::before {
+  content: '\E040';
+  color: #b8383d;
+}
+
+.seti-_gulp::before {
+  content: '\E040';
+  color: #cc3e44;
+}
+
+.seti-_hacklang_light::before {
+  content: '\E041';
+  color: #cc6d2e;
+}
+
+.seti-_hacklang::before {
+  content: '\E041';
+  color: #e37933;
+}
+
+.seti-_haml_light::before {
+  content: '\E042';
+  color: #b8383d;
+}
+
+.seti-_haml::before {
+  content: '\E042';
+  color: #cc3e44;
+}
+
+.seti-_happenings_light::before {
+  content: '\E043';
+  color: #498ba7;
+}
+
+.seti-_happenings::before {
+  content: '\E043';
+  color: #519aba;
+}
+
+.seti-_haskell_light::before {
+  content: '\E044';
+  color: #9068b0;
+}
+
+.seti-_haskell::before {
+  content: '\E044';
+  color: #a074c4;
+}
+
+.seti-_haxe_light::before {
+  content: '\E045';
+  color: #cc6d2e;
+}
+
+.seti-_haxe::before {
+  content: '\E045';
+  color: #e37933;
+}
+
+.seti-_haxe_1_light::before {
+  content: '\E045';
+  color: #b7b73b;
+}
+
+.seti-_haxe_1::before {
+  content: '\E045';
+  color: #cbcb41;
+}
+
+.seti-_haxe_2_light::before {
+  content: '\E045';
+  color: #498ba7;
+}
+
+.seti-_haxe_2::before {
+  content: '\E045';
+  color: #519aba;
+}
+
+.seti-_haxe_3_light::before {
+  content: '\E045';
+  color: #9068b0;
+}
+
+.seti-_haxe_3::before {
+  content: '\E045';
+  color: #a074c4;
+}
+
+.seti-_heroku_light::before {
+  content: '\E046';
+  color: #9068b0;
+}
+
+.seti-_heroku::before {
+  content: '\E046';
+  color: #a074c4;
+}
+
+.seti-_hex_light::before {
+  content: '\E047';
+  color: #b8383d;
+}
+
+.seti-_hex::before {
+  content: '\E047';
+  color: #cc3e44;
+}
+
+.seti-_html_light::before {
+  content: '\E048';
+  color: #498ba7;
+}
+
+.seti-_html::before {
+  content: '\E048';
+  color: #519aba;
+}
+
+.seti-_html_1_light::before {
+  content: '\E048';
+  color: #7fae42;
+}
+
+.seti-_html_1::before {
+  content: '\E048';
+  color: #8dc149;
+}
+
+.seti-_html_2_light::before {
+  content: '\E048';
+  color: #b7b73b;
+}
+
+.seti-_html_2::before {
+  content: '\E048';
+  color: #cbcb41;
+}
+
+.seti-_html_3_light::before {
+  content: '\E048';
+  color: #cc6d2e;
+}
+
+.seti-_html_3::before {
+  content: '\E048';
+  color: #e37933;
+}
+
+.seti-_html_erb_light::before {
+  content: '\E049';
+  color: #b8383d;
+}
+
+.seti-_html_erb::before {
+  content: '\E049';
+  color: #cc3e44;
+}
+
+.seti-_ignored_light::before {
+  content: '\E04A';
+  color: #3b4b52;
+}
+
+.seti-_ignored::before {
+  content: '\E04A';
+  color: #41535b;
+}
+
+.seti-_illustrator_light::before {
+  content: '\E04B';
+  color: #b7b73b;
+}
+
+.seti-_illustrator::before {
+  content: '\E04B';
+  color: #cbcb41;
+}
+
+.seti-_image_light::before {
+  content: '\E04C';
+  color: #9068b0;
+}
+
+.seti-_image::before {
+  content: '\E04C';
+  color: #a074c4;
+}
+
+.seti-_info_light::before {
+  content: '\E04D';
+  color: #498ba7;
+}
+
+.seti-_info::before {
+  content: '\E04D';
+  color: #519aba;
+}
+
+.seti-_ionic_light::before {
+  content: '\E04E';
+  color: #498ba7;
+}
+
+.seti-_ionic::before {
+  content: '\E04E';
+  color: #519aba;
+}
+
+.seti-_jade_light::before {
+  content: '\E04F';
+  color: #b8383d;
+}
+
+.seti-_jade::before {
+  content: '\E04F';
+  color: #cc3e44;
+}
+
+.seti-_java_light::before {
+  content: '\E050';
+  color: #b8383d;
+}
+
+.seti-_java::before {
+  content: '\E050';
+  color: #cc3e44;
+}
+
+.seti-_java_1_light::before {
+  content: '\E050';
+  color: #498ba7;
+}
+
+.seti-_java_1::before {
+  content: '\E050';
+  color: #519aba;
+}
+
+.seti-_javascript_light::before {
+  content: '\E051';
+  color: #b7b73b;
+}
+
+.seti-_javascript::before {
+  content: '\E051';
+  color: #cbcb41;
+}
+
+.seti-_javascript_1_light::before {
+  content: '\E051';
+  color: #cc6d2e;
+}
+
+.seti-_javascript_1::before {
+  content: '\E051';
+  color: #e37933;
+}
+
+.seti-_javascript_2_light::before {
+  content: '\E051';
+  color: #498ba7;
+}
+
+.seti-_javascript_2::before {
+  content: '\E051';
+  color: #519aba;
+}
+
+.seti-_jenkins_light::before {
+  content: '\E052';
+  color: #b8383d;
+}
+
+.seti-_jenkins::before {
+  content: '\E052';
+  color: #cc3e44;
+}
+
+.seti-_jinja_light::before {
+  content: '\E053';
+  color: #b8383d;
+}
+
+.seti-_jinja::before {
+  content: '\E053';
+  color: #cc3e44;
+}
+
+.seti-_json_light::before {
+  content: '\E055';
+  color: #b7b73b;
+}
+
+.seti-_json::before {
+  content: '\E055';
+  color: #cbcb41;
+}
+
+.seti-_json_1_light::before {
+  content: '\E055';
+  color: #7fae42;
+}
+
+.seti-_json_1::before {
+  content: '\E055';
+  color: #8dc149;
+}
+
+.seti-_julia_light::before {
+  content: '\E056';
+  color: #9068b0;
+}
+
+.seti-_julia::before {
+  content: '\E056';
+  color: #a074c4;
+}
+
+.seti-_karma_light::before {
+  content: '\E057';
+  color: #7fae42;
+}
+
+.seti-_karma::before {
+  content: '\E057';
+  color: #8dc149;
+}
+
+.seti-_kotlin_light::before {
+  content: '\E058';
+  color: #cc6d2e;
+}
+
+.seti-_kotlin::before {
+  content: '\E058';
+  color: #e37933;
+}
+
+.seti-_less_light::before {
+  content: '\E059';
+  color: #498ba7;
+}
+
+.seti-_less::before {
+  content: '\E059';
+  color: #519aba;
+}
+
+.seti-_license_light::before {
+  content: '\E05A';
+  color: #b7b73b;
+}
+
+.seti-_license::before {
+  content: '\E05A';
+  color: #cbcb41;
+}
+
+.seti-_license_1_light::before {
+  content: '\E05A';
+  color: #cc6d2e;
+}
+
+.seti-_license_1::before {
+  content: '\E05A';
+  color: #e37933;
+}
+
+.seti-_license_2_light::before {
+  content: '\E05A';
+  color: #b8383d;
+}
+
+.seti-_license_2::before {
+  content: '\E05A';
+  color: #cc3e44;
+}
+
+.seti-_liquid_light::before {
+  content: '\E05B';
+  color: #7fae42;
+}
+
+.seti-_liquid::before {
+  content: '\E05B';
+  color: #8dc149;
+}
+
+.seti-_livescript_light::before {
+  content: '\E05C';
+  color: #498ba7;
+}
+
+.seti-_livescript::before {
+  content: '\E05C';
+  color: #519aba;
+}
+
+.seti-_lock_light::before {
+  content: '\E05D';
+  color: #7fae42;
+}
+
+.seti-_lock::before {
+  content: '\E05D';
+  color: #8dc149;
+}
+
+.seti-_lua_light::before {
+  content: '\E05E';
+  color: #498ba7;
+}
+
+.seti-_lua::before {
+  content: '\E05E';
+  color: #519aba;
+}
+
+.seti-_makefile_light::before {
+  content: '\E05F';
+  color: #cc6d2e;
+}
+
+.seti-_makefile::before {
+  content: '\E05F';
+  color: #e37933;
+}
+
+.seti-_makefile_1_light::before {
+  content: '\E05F';
+  color: #9068b0;
+}
+
+.seti-_makefile_1::before {
+  content: '\E05F';
+  color: #a074c4;
+}
+
+.seti-_makefile_2_light::before {
+  content: '\E05F';
+  color: #627379;
+}
+
+.seti-_makefile_2::before {
+  content: '\E05F';
+  color: #6d8086;
+}
+
+.seti-_makefile_3_light::before {
+  content: '\E05F';
+  color: #498ba7;
+}
+
+.seti-_makefile_3::before {
+  content: '\E05F';
+  color: #519aba;
+}
+
+.seti-_markdown_light::before {
+  content: '\E060';
+  color: #498ba7;
+}
+
+.seti-_markdown::before {
+  content: '\E060';
+  color: #519aba;
+}
+
+.seti-_maven_light::before {
+  content: '\E061';
+  color: #b8383d;
+}
+
+.seti-_maven::before {
+  content: '\E061';
+  color: #cc3e44;
+}
+
+.seti-_mdo_light::before {
+  content: '\E062';
+  color: #b8383d;
+}
+
+.seti-_mdo::before {
+  content: '\E062';
+  color: #cc3e44;
+}
+
+.seti-_mustache_light::before {
+  content: '\E063';
+  color: #cc6d2e;
+}
+
+.seti-_mustache::before {
+  content: '\E063';
+  color: #e37933;
+}
+
+.seti-_nim_light::before {
+  content: '\E065';
+  color: #b7b73b;
+}
+
+.seti-_nim::before {
+  content: '\E065';
+  color: #cbcb41;
+}
+
+.seti-_notebook_light::before {
+  content: '\E066';
+  color: #498ba7;
+}
+
+.seti-_notebook::before {
+  content: '\E066';
+  color: #519aba;
+}
+
+.seti-_npm_light::before {
+  content: '\E067';
+  color: #3b4b52;
+}
+
+.seti-_npm::before {
+  content: '\E067';
+  color: #41535b;
+}
+
+.seti-_npm_1_light::before {
+  content: '\E067';
+  color: #b8383d;
+}
+
+.seti-_npm_1::before {
+  content: '\E067';
+  color: #cc3e44;
+}
+
+.seti-_npm_ignored_light::before {
+  content: '\E068';
+  color: #3b4b52;
+}
+
+.seti-_npm_ignored::before {
+  content: '\E068';
+  color: #41535b;
+}
+
+.seti-_nunjucks_light::before {
+  content: '\E069';
+  color: #7fae42;
+}
+
+.seti-_nunjucks::before {
+  content: '\E069';
+  color: #8dc149;
+}
+
+.seti-_ocaml_light::before {
+  content: '\E06A';
+  color: #cc6d2e;
+}
+
+.seti-_ocaml::before {
+  content: '\E06A';
+  color: #e37933;
+}
+
+.seti-_odata_light::before {
+  content: '\E06B';
+  color: #cc6d2e;
+}
+
+.seti-_odata::before {
+  content: '\E06B';
+  color: #e37933;
+}
+
+.seti-_pddl_light::before {
+  content: '\E06C';
+  color: #9068b0;
+}
+
+.seti-_pddl::before {
+  content: '\E06C';
+  color: #a074c4;
+}
+
+.seti-_pdf_light::before {
+  content: '\E06D';
+  color: #b8383d;
+}
+
+.seti-_pdf::before {
+  content: '\E06D';
+  color: #cc3e44;
+}
+
+.seti-_perl_light::before {
+  content: '\E06E';
+  color: #498ba7;
+}
+
+.seti-_perl::before {
+  content: '\E06E';
+  color: #519aba;
+}
+
+.seti-_photoshop_light::before {
+  content: '\E06F';
+  color: #498ba7;
+}
+
+.seti-_photoshop::before {
+  content: '\E06F';
+  color: #519aba;
+}
+
+.seti-_php_light::before {
+  content: '\E070';
+  color: #9068b0;
+}
+
+.seti-_php::before {
+  content: '\E070';
+  color: #a074c4;
+}
+
+.seti-_pipeline_light::before {
+  content: '\E071';
+  color: #cc6d2e;
+}
+
+.seti-_pipeline::before {
+  content: '\E071';
+  color: #e37933;
+}
+
+.seti-_plan_light::before {
+  content: '\E072';
+  color: #7fae42;
+}
+
+.seti-_plan::before {
+  content: '\E072';
+  color: #8dc149;
+}
+
+.seti-_platformio_light::before {
+  content: '\E073';
+  color: #cc6d2e;
+}
+
+.seti-_platformio::before {
+  content: '\E073';
+  color: #e37933;
+}
+
+.seti-_powershell_light::before {
+  content: '\E074';
+  color: #498ba7;
+}
+
+.seti-_powershell::before {
+  content: '\E074';
+  color: #519aba;
+}
+
+.seti-_prisma_light::before {
+  content: '\E075';
+  color: #498ba7;
+}
+
+.seti-_prisma::before {
+  content: '\E075';
+  color: #519aba;
+}
+
+.seti-_prolog_light::before {
+  content: '\E077';
+  color: #cc6d2e;
+}
+
+.seti-_prolog::before {
+  content: '\E077';
+  color: #e37933;
+}
+
+.seti-_pug_light::before {
+  content: '\E078';
+  color: #b8383d;
+}
+
+.seti-_pug::before {
+  content: '\E078';
+  color: #cc3e44;
+}
+
+.seti-_puppet_light::before {
+  content: '\E079';
+  color: #b7b73b;
+}
+
+.seti-_puppet::before {
+  content: '\E079';
+  color: #cbcb41;
+}
+
+.seti-_purescript_light::before {
+  content: '\E07A';
+  color: #bfc2c1;
+}
+
+.seti-_purescript::before {
+  content: '\E07A';
+  color: #d4d7d6;
+}
+
+.seti-_python_light::before {
+  content: '\E07B';
+  color: #498ba7;
+}
+
+.seti-_python::before {
+  content: '\E07B';
+  color: #519aba;
+}
+
+.seti-_react_light::before {
+  content: '\E07D';
+  color: #498ba7;
+}
+
+.seti-_react::before {
+  content: '\E07D';
+  color: #519aba;
+}
+
+.seti-_react_1_light::before {
+  content: '\E07D';
+  color: #cc6d2e;
+}
+
+.seti-_react_1::before {
+  content: '\E07D';
+  color: #e37933;
+}
+
+.seti-_reasonml_light::before {
+  content: '\E07E';
+  color: #b8383d;
+}
+
+.seti-_reasonml::before {
+  content: '\E07E';
+  color: #cc3e44;
+}
+
+.seti-_rescript_light::before {
+  content: '\E07F';
+  color: #b8383d;
+}
+
+.seti-_rescript::before {
+  content: '\E07F';
+  color: #cc3e44;
+}
+
+.seti-_rescript_1_light::before {
+  content: '\E07F';
+  color: #dd4b78;
+}
+
+.seti-_rescript_1::before {
+  content: '\E07F';
+  color: #f55385;
+}
+
+.seti-_rollup_light::before {
+  content: '\E080';
+  color: #b8383d;
+}
+
+.seti-_rollup::before {
+  content: '\E080';
+  color: #cc3e44;
+}
+
+.seti-_ruby_light::before {
+  content: '\E081';
+  color: #b8383d;
+}
+
+.seti-_ruby::before {
+  content: '\E081';
+  color: #cc3e44;
+}
+
+.seti-_rust_light::before {
+  content: '\E082';
+  color: #627379;
+}
+
+.seti-_rust::before {
+  content: '\E082';
+  color: #6d8086;
+}
+
+.seti-_salesforce_light::before {
+  content: '\E083';
+  color: #498ba7;
+}
+
+.seti-_salesforce::before {
+  content: '\E083';
+  color: #519aba;
+}
+
+.seti-_sass_light::before {
+  content: '\E084';
+  color: #dd4b78;
+}
+
+.seti-_sass::before {
+  content: '\E084';
+  color: #f55385;
+}
+
+.seti-_sbt_light::before {
+  content: '\E085';
+  color: #498ba7;
+}
+
+.seti-_sbt::before {
+  content: '\E085';
+  color: #519aba;
+}
+
+.seti-_scala_light::before {
+  content: '\E086';
+  color: #b8383d;
+}
+
+.seti-_scala::before {
+  content: '\E086';
+  color: #cc3e44;
+}
+
+.seti-_shell_light::before {
+  content: '\E089';
+  color: #7fae42;
+}
+
+.seti-_shell::before {
+  content: '\E089';
+  color: #8dc149;
+}
+
+.seti-_slim_light::before {
+  content: '\E08A';
+  color: #cc6d2e;
+}
+
+.seti-_slim::before {
+  content: '\E08A';
+  color: #e37933;
+}
+
+.seti-_smarty_light::before {
+  content: '\E08B';
+  color: #b7b73b;
+}
+
+.seti-_smarty::before {
+  content: '\E08B';
+  color: #cbcb41;
+}
+
+.seti-_spring_light::before {
+  content: '\E08C';
+  color: #7fae42;
+}
+
+.seti-_spring::before {
+  content: '\E08C';
+  color: #8dc149;
+}
+
+.seti-_stylelint_light::before {
+  content: '\E08D';
+  color: #bfc2c1;
+}
+
+.seti-_stylelint::before {
+  content: '\E08D';
+  color: #d4d7d6;
+}
+
+.seti-_stylelint_1_light::before {
+  content: '\E08D';
+  color: #455155;
+}
+
+.seti-_stylelint_1::before {
+  content: '\E08D';
+  color: #4d5a5e;
+}
+
+.seti-_stylus_light::before {
+  content: '\E08E';
+  color: #7fae42;
+}
+
+.seti-_stylus::before {
+  content: '\E08E';
+  color: #8dc149;
+}
+
+.seti-_sublime_light::before {
+  content: '\E08F';
+  color: #cc6d2e;
+}
+
+.seti-_sublime::before {
+  content: '\E08F';
+  color: #e37933;
+}
+
+.seti-_svelte_light::before {
+  content: '\E090';
+  color: #b8383d;
+}
+
+.seti-_svelte::before {
+  content: '\E090';
+  color: #cc3e44;
+}
+
+.seti-_svg_light::before {
+  content: '\E091';
+  color: #9068b0;
+}
+
+.seti-_svg::before {
+  content: '\E091';
+  color: #a074c4;
+}
+
+.seti-_svg_1_light::before {
+  content: '\E091';
+  color: #498ba7;
+}
+
+.seti-_svg_1::before {
+  content: '\E091';
+  color: #519aba;
+}
+
+.seti-_swift_light::before {
+  content: '\E092';
+  color: #cc6d2e;
+}
+
+.seti-_swift::before {
+  content: '\E092';
+  color: #e37933;
+}
+
+.seti-_terraform_light::before {
+  content: '\E093';
+  color: #9068b0;
+}
+
+.seti-_terraform::before {
+  content: '\E093';
+  color: #a074c4;
+}
+
+.seti-_tex_light::before {
+  content: '\E094';
+  color: #498ba7;
+}
+
+.seti-_tex::before {
+  content: '\E094';
+  color: #519aba;
+}
+
+.seti-_tex_1_light::before {
+  content: '\E094';
+  color: #b7b73b;
+}
+
+.seti-_tex_1::before {
+  content: '\E094';
+  color: #cbcb41;
+}
+
+.seti-_tex_2_light::before {
+  content: '\E094';
+  color: #cc6d2e;
+}
+
+.seti-_tex_2::before {
+  content: '\E094';
+  color: #e37933;
+}
+
+.seti-_tex_3_light::before {
+  content: '\E094';
+  color: #bfc2c1;
+}
+
+.seti-_tex_3::before {
+  content: '\E094';
+  color: #d4d7d6;
+}
+
+.seti-_todo::before {
+  content: '\E096';
+  color: inherit;
+}
+
+.seti-_tsconfig_light::before {
+  content: '\E097';
+  color: #498ba7;
+}
+
+.seti-_tsconfig::before {
+  content: '\E097';
+  color: #519aba;
+}
+
+.seti-_twig_light::before {
+  content: '\E098';
+  color: #7fae42;
+}
+
+.seti-_twig::before {
+  content: '\E098';
+  color: #8dc149;
+}
+
+.seti-_typescript_light::before {
+  content: '\E099';
+  color: #498ba7;
+}
+
+.seti-_typescript::before {
+  content: '\E099';
+  color: #519aba;
+}
+
+.seti-_typescript_1_light::before {
+  content: '\E099';
+  color: #cc6d2e;
+}
+
+.seti-_typescript_1::before {
+  content: '\E099';
+  color: #e37933;
+}
+
+.seti-_vala_light::before {
+  content: '\E09A';
+  color: #627379;
+}
+
+.seti-_vala::before {
+  content: '\E09A';
+  color: #6d8086;
+}
+
+.seti-_video_light::before {
+  content: '\E09B';
+  color: #dd4b78;
+}
+
+.seti-_video::before {
+  content: '\E09B';
+  color: #f55385;
+}
+
+.seti-_vite_light::before {
+  content: '\E09C';
+  color: #b7b73b;
+}
+
+.seti-_vite::before {
+  content: '\E09C';
+  color: #cbcb41;
+}
+
+.seti-_vue_light::before {
+  content: '\E09D';
+  color: #7fae42;
+}
+
+.seti-_vue::before {
+  content: '\E09D';
+  color: #8dc149;
+}
+
+.seti-_wasm_light::before {
+  content: '\E09E';
+  color: #9068b0;
+}
+
+.seti-_wasm::before {
+  content: '\E09E';
+  color: #a074c4;
+}
+
+.seti-_wat_light::before {
+  content: '\E09F';
+  color: #9068b0;
+}
+
+.seti-_wat::before {
+  content: '\E09F';
+  color: #a074c4;
+}
+
+.seti-_webpack_light::before {
+  content: '\E0A0';
+  color: #498ba7;
+}
+
+.seti-_webpack::before {
+  content: '\E0A0';
+  color: #519aba;
+}
+
+.seti-_wgt_light::before {
+  content: '\E0A1';
+  color: #498ba7;
+}
+
+.seti-_wgt::before {
+  content: '\E0A1';
+  color: #519aba;
+}
+
+.seti-_windows_light::before {
+  content: '\E0A2';
+  color: #498ba7;
+}
+
+.seti-_windows::before {
+  content: '\E0A2';
+  color: #519aba;
+}
+
+.seti-_word_light::before {
+  content: '\E0A3';
+  color: #498ba7;
+}
+
+.seti-_word::before {
+  content: '\E0A3';
+  color: #519aba;
+}
+
+.seti-_xls_light::before {
+  content: '\E0A4';
+  color: #7fae42;
+}
+
+.seti-_xls::before {
+  content: '\E0A4';
+  color: #8dc149;
+}
+
+.seti-_xml_light::before {
+  content: '\E0A5';
+  color: #cc6d2e;
+}
+
+.seti-_xml::before {
+  content: '\E0A5';
+  color: #e37933;
+}
+
+.seti-_yarn_light::before {
+  content: '\E0A6';
+  color: #498ba7;
+}
+
+.seti-_yarn::before {
+  content: '\E0A6';
+  color: #519aba;
+}
+
+.seti-_yml_light::before {
+  content: '\E0A7';
+  color: #9068b0;
+}
+
+.seti-_yml::before {
+  content: '\E0A7';
+  color: #a074c4;
+}
+
+.seti-_zig_light::before {
+  content: '\E0A8';
+  color: #cc6d2e;
+}
+
+.seti-_zig::before {
+  content: '\E0A8';
+  color: #e37933;
+}
+
+.seti-_zip_light::before {
+  content: '\E0A9';
+  color: #b8383d;
+}
+
+.seti-_zip::before {
+  content: '\E0A9';
+  color: #cc3e44;
+}
+
+.seti-_zip_1_light::before {
+  content: '\E0A9';
+  color: #627379;
+}
+
+.seti-_zip_1::before {
+  content: '\E0A9';
+  color: #6d8086;
+}
+
