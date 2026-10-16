@@ -150,39 +150,14 @@ i.codicon {
   border-right: 1px solid var(--border);
 }
 
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 36px;
-  padding: 0 8px 0 20px;
+/* 侧栏底部栏（设置入口，对照 VS Code 活动栏底部） */
+.sidebar-footer {
   flex-shrink: 0;
-}
-
-.sidebar-title {
-  font-size: 11px;
-  color: var(--fg-dim);
-  letter-spacing: 0.2px;
-}
-
-/* 应用 logo（侧栏标题左侧） */
-.sidebar-header-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.sidebar-logo {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  flex: none;
-}
-
-.sidebar-header-actions {
-  display: flex;
-  gap: 2px;
+  height: 32px;
+  padding: 0 8px;
+  border-top: 1px solid var(--border);
 }
 
 .sidebar-scroll {
@@ -1692,4 +1667,25 @@ i.codicon {
 .commit-hover-copy:hover {
   background: var(--hover-overlay);
   color: var(--fg);
+}
+
+/* ---------- diff 编辑器操作工具栏 ---------- */
+
+/* diff 标签栏右侧的编辑器操作工具栏 */
+.editor-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding-right: 6px;
+  flex-shrink: 0;
+}
+
+.editor-actions .icon-btn.active {
+  background: var(--hover-strong);
+}
+
+/* 变更块导航：当前变更块整行浅色高亮 */
+.current-change-line {
+  background: var(--hover-overlay);
 }
