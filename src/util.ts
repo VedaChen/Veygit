@@ -29,6 +29,23 @@ export function splitPath(path: string): { dir: string; name: string } {
   return { dir: path.slice(0, idx + 1), name: path.slice(idx + 1) };
 }
 
+/** 按路径 / 名称 / 状态对更改排序（返回新数组，对照 VS Code SCM 排序选项） */
+export function sortChanges(
+  changes: FileChange[],
+  mode: 'path' | 'name' | 'status',
+): FileChange[] {
+  const byPath = (a: FileChange, b: FileChange): number => a.path.localeCompare(b.path);
+  const sorted = [...changes];
+  if (mode === 'name') {
+    sorted.sort((a, b) => splitPath(a.path).name.localeCompare(splitPath(b.path).name) || byPath(a, b));
+  } else if (mode === 'status') {
+    sorted.sort((a, b) => a.status.localeCompare(b.status) || byPath(a, b));
+  } else {
+    sorted.sort(byPath);
+  }
+  return sorted;
+}
+
 export function statusColorClass(status: string): string {
   switch (status) {
     case 'M':

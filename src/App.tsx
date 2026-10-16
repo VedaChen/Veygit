@@ -23,6 +23,28 @@ export default function App() {
     <div className="app">
       <div className="body">
         <Sidebar />
+        <div
+          className="sash"
+          title="拖动调整侧栏宽度"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            const startX = e.clientX;
+            const startWidth = useStore.getState().sidebarWidth;
+            const onMove = (ev: PointerEvent): void => {
+              useStore.getState().setSidebarWidth(startWidth + ev.clientX - startX);
+            };
+            const onUp = (): void => {
+              window.removeEventListener('pointermove', onMove);
+              window.removeEventListener('pointerup', onUp);
+              document.body.style.cursor = '';
+              document.body.style.userSelect = '';
+            };
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+          }}
+        />
         <main className="main">
           <DiffViewer />
         </main>

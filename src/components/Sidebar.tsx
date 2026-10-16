@@ -8,9 +8,10 @@ export function Sidebar() {
   const refreshAll = useStore((s) => s.refreshAll);
   const openRepository = useStore((s) => s.openRepository);
   const busy = useStore((s) => s.busy);
+  const sidebarWidth = useStore((s) => s.sidebarWidth);
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" style={{ width: sidebarWidth }}>
       <div className="sidebar-header">
         <div className="sidebar-header-title">
           <img className="sidebar-logo" src="/logo.png" alt="Git Panel" />

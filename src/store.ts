@@ -55,6 +55,12 @@ interface AppStore {
   /** SCM 文件列表视图模式（列表 / 树） */
   viewMode: ScmViewMode;
   setViewMode: (mode: ScmViewMode) => void;
+  /** SCM 更改列表排序方式（按路径 / 名称 / 状态） */
+  sortMode: ScmSortMode;
+  setSortMode: (mode: ScmSortMode) => void;
+  /** 侧栏宽度（像素） */
+  sidebarWidth: number;
+  setSidebarWidth: (width: number) => void;
   branchPicker: BranchPickerState | null;
 
   init: () => Promise<void>;
@@ -104,6 +110,39 @@ function loadViewMode(): ScmViewMode {
     return localStorage.getItem(VIEW_MODE_KEY) === 'tree' ? 'tree' : 'list';
   } catch {
     return 'list';
+  }
+}
+
+/** SCM 更改列表排序方式（对照 VS Code SCM 视图排序选项） */
+export type ScmSortMode = 'path' | 'name' | 'status';
+
+const SORT_MODE_KEY = 'vscode-git-panel.scmSortMode';
+
+function loadSortMode(): ScmSortMode {
+  try {
+    const raw = localStorage.getItem(SORT_MODE_KEY);
+    return raw === 'name' || raw === 'status' ? raw : 'path';
+  } catch {
+    return 'path';
+  }
+}
+
+/** 侧栏宽度（像素，可拖拽调整，对照 VS Code 侧栏 sash） */
+const SIDEBAR_WIDTH_KEY = 'vscode-git-panel.sidebarWidth';
+const SIDEBAR_WIDTH_DEFAULT = 360;
+const SIDEBAR_WIDTH_MIN = 220;
+const SIDEBAR_WIDTH_MAX = 720;
+
+function clampSidebarWidth(width: number): number {
+  return Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, width));
+}
+
+function loadSidebarWidth(): number {
+  try {
+    const raw = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY));
+    return Number.isFinite(raw) && raw > 0 ? clampSidebarWidth(raw) : SIDEBAR_WIDTH_DEFAULT;
+  } catch {
+    return SIDEBAR_WIDTH_DEFAULT;
   }
 }
 
@@ -236,6 +275,25 @@ export const useStore = create<AppStore>()((set, get) => {
       set({ viewMode: mode });
       try {
         localStorage.setItem(VIEW_MODE_KEY, mode);
+      } catch {
+        // ignore
+      }
+    },
+    sortMode: loadSortMode(),
+    setSortMode: (mode) => {
+      set({ sortMode: mode });
+      try {
+        localStorage.setItem(SORT_MODE_KEY, mode);
+      } catch {
+        // ignore
+      }
+    },
+    sidebarWidth: loadSidebarWidth(),
+    setSidebarWidth: (width) => {
+      const clamped = clampSidebarWidth(width);
+      set({ sidebarWidth: clamped });
+      try {
+        localStorage.setItem(SIDEBAR_WIDTH_KEY, String(clamped));
       } catch {
         // ignore
       }

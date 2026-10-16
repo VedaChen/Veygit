@@ -69,6 +69,16 @@ i.codicon {
   min-height: 0;
 }
 
+/* 右侧编辑器区域容器（补齐高度链：.body → .main → .diff-view → .diff-editor） */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-editor);
+}
+
 /* ---------- 通用按钮 ---------- */
 
 .icon-btn {
@@ -97,10 +107,9 @@ i.codicon {
 
 /* ---------- 侧栏 ---------- */
 
+/* 侧栏宽度由内联 style 控制（可拖拽调整，范围见 store 的 clampSidebarWidth） */
 .sidebar {
-  width: 360px;
-  min-width: 300px;
-  max-width: 480px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background: var(--bg-sidebar);
@@ -147,6 +156,20 @@ i.codicon {
   overflow-y: auto;
   min-height: 0;
   padding-bottom: 16px;
+}
+
+/* 侧栏与编辑区之间的拖拽分隔条（sash） */
+.sash {
+  flex-shrink: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.sash:hover,
+.sash:active {
+  background: #007acc;
 }
 
 /* ---------- 区块 ---------- */
@@ -550,17 +573,18 @@ i.codicon {
 
 .commit-input {
   width: 100%;
-  min-height: 56px;
-  max-height: 200px;
-  padding: 6px 8px;
+  min-height: 26px;
+  max-height: 170px;
+  padding: 3px 8px;
   background: var(--bg-input);
   color: var(--fg);
   border: 1px solid transparent;
   border-radius: 4px;
-  resize: vertical;
+  resize: none;
+  overflow-y: auto;
   outline: none;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.4;
   user-select: text;
 }
 
@@ -570,6 +594,58 @@ i.codicon {
 
 .commit-input::placeholder {
   color: #8a8a8a;
+}
+
+/* split 提交按钮：主按钮 + 下拉箭头。
+   .commit-split 是 .commit-box 的直接子元素（column flex），占满整行宽；
+   与输入框的间距由 .commit-box 的 gap: 6px 提供，故不再设置 margin-top。 */
+.commit-split {
+  display: flex;
+  width: 100%;
+}
+
+.commit-split-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 26px;
+  border: none;
+  border-radius: 4px 0 0 4px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.commit-split-main:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.commit-split-arrow {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.commit-split-arrow:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+/* 与全局 button:disabled（opacity: 0.5）保持一致 */
+.commit-split-main:disabled,
+.commit-split-arrow:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .commit-actions {

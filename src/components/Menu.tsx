@@ -91,30 +91,8 @@ function MenuEntries({
   );
 }
 
-/** “更改”资源分组菜单数据工厂（对照 VS Code，含列表/树视图切换勾选项） */
-export function buildChangesMenu(opts: {
-  viewMode: 'list' | 'tree';
-  onViewMode: (mode: 'list' | 'tree') => void;
-  onStageAll: () => void;
-  onDiscardAll: () => void;
-}): MenuEntry[] {
-  return [
-    { label: '以列表形式查看', checked: opts.viewMode === 'list', onSelect: () => opts.onViewMode('list') },
-    { label: '以树形式查看', checked: opts.viewMode === 'tree', onSelect: () => opts.onViewMode('tree') },
-    { separator: true },
-    { label: '暂存所有更改', onSelect: opts.onStageAll },
-    { label: '放弃所有更改', onSelect: opts.onDiscardAll },
-  ];
-}
-
-/** 存储库“更多操作”级联菜单数据工厂（对照 VS Code 源代码管理存储库视图） */
-export function buildRepoMenu({
-  onSync,
-  onCloseRepo,
-}: {
-  onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void;
-  onCloseRepo: () => void;
-}): MenuEntry[] {
+/** “拉取”到“显示 GIT 输出”的公共菜单段（存储库菜单与更改菜单共用） */
+function buildGitCommands(onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void): MenuEntry[] {
   return [
     { label: '拉取', onSelect: () => onSync('pull') },
     { label: '推送', onSelect: () => onSync('push') },
@@ -223,7 +201,70 @@ export function buildRepoMenu({
     },
     { separator: true },
     { label: '显示 GIT 输出' },
+  ];
+}
+
+/** 存储库“更多操作”级联菜单数据工厂（对照 VS Code 源代码管理存储库视图） */
+export function buildRepoMenu({
+  onSync,
+  onCloseRepo,
+}: {
+  onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void;
+  onCloseRepo: () => void;
+}): MenuEntry[] {
+  return [
+    ...buildGitCommands(onSync),
     { separator: true },
     { label: '关闭存储库', onSelect: onCloseRepo },
+  ];
+}
+
+/** 从仓库根路径取显示名（最后一段） */
+function repoName(root: string): string {
+  const parts = root.split(/[\\/]/).filter(Boolean);
+  return parts.length > 0 ? parts[parts.length - 1] : root;
+}
+
+export interface ChangesMenuOptions {
+  viewMode: 'list' | 'tree';
+  sortMode: 'path' | 'name' | 'status';
+  /** 已打开的仓库根路径列表 */
+  repos: string[];
+  activeRoot: string | null;
+  onViewMode: (mode: 'list' | 'tree') => void;
+  onSortMode: (mode: 'path' | 'name' | 'status') => void;
+  onSelectRepo: (root: string) => void;
+  onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void;
+}
+
+/** “更改”标题栏 ⋯ 菜单数据工厂（对照 VS Code 源代码管理 SCM 视图菜单） */
+export function buildChangesMenu(opts: ChangesMenuOptions): MenuEntry[] {
+  return [
+    {
+      label: opts.viewMode === 'list' ? '以树形式查看' : '以列表形式查看',
+      onSelect: () => opts.onViewMode(opts.viewMode === 'list' ? 'tree' : 'list'),
+    },
+    {
+      label: '查看和排序',
+      children: [
+        {
+          label: '存储库',
+          children: opts.repos.map((root) => ({
+            label: repoName(root),
+            checked: root === opts.activeRoot,
+            onSelect: () => opts.onSelectRepo(root),
+          })),
+        },
+        { separator: true },
+        { label: '以列表形式查看', checked: opts.viewMode === 'list', onSelect: () => opts.onViewMode('list') },
+        { label: '以树形式查看', checked: opts.viewMode === 'tree', onSelect: () => opts.onViewMode('tree') },
+        { separator: true },
+        { label: '按路径对更改进行排序', checked: opts.sortMode === 'path', onSelect: () => opts.onSortMode('path') },
+        { label: '按名称对更改进行排序', checked: opts.sortMode === 'name', onSelect: () => opts.onSortMode('name') },
+        { label: '按状态对更改进行排序', checked: opts.sortMode === 'status', onSelect: () => opts.onSortMode('status') },
+      ],
+    },
+    { separator: true },
+    ...buildGitCommands(opts.onSync),
   ];
 }

@@ -3,7 +3,7 @@ import { confirm } from '@tauri-apps/plugin-dialog';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import type { FileChange } from '../types';
-import { buildTree } from '../util';
+import { buildTree, sortChanges } from '../util';
 import { SectionHeader } from './Section';
 import { CommitBox } from './CommitBox';
 import { FileTree } from './FileTree';
@@ -14,9 +14,16 @@ export function ChangesSection() {
   const collapsed = useStore((s) => !!s.collapsed['section:changes']);
   const viewMode = useStore((s) => s.viewMode);
   const setViewMode = useStore((s) => s.setViewMode);
+  const sortMode = useStore((s) => s.sortMode);
+  const setSortMode = useStore((s) => s.setSortMode);
+  const activeRoot = useStore((s) => s.activeRoot);
+  const setActive = useStore((s) => s.setActive);
+  const sync = useStore((s) => s.sync);
   const busy = useStore((s) => s.busy);
   const stage = useStore((s) => s.stage);
   const discard = useStore((s) => s.discard);
+  // 注意：选择器只取 repos，再本地 map，避免每次返回新数组导致重渲染
+  const repoRoots = useStore((s) => s.repos).map((r) => r.info.root);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   if (!repo) {
@@ -135,9 +142,13 @@ export function ChangesSection() {
         <Menu
           entries={buildChangesMenu({
             viewMode,
+            sortMode,
+            repos: repoRoots,
+            activeRoot,
             onViewMode: setViewMode,
-            onStageAll,
-            onDiscardAll: () => void onDiscardAll(),
+            onSortMode: setSortMode,
+            onSelectRepo: setActive,
+            onSync: (op) => void sync(repo.info.root, op),
           })}
           x={menuPos.x}
           y={menuPos.y}
@@ -167,6 +178,7 @@ function ChangeGroup({
   const stage = useStore((s) => s.stage);
   const unstage = useStore((s) => s.unstage);
   const discard = useStore((s) => s.discard);
+  const sortMode = useStore((s) => s.sortMode);
 
   if (changes.length === 0) {
     return null;
@@ -175,7 +187,8 @@ function ChangeGroup({
   const isIndex = id === 'index';
   const isMerge = id === 'merge';
   const canDiscard = !isMerge;
-  const tree = buildTree(changes);
+  // 先按当前排序模式排序，再构建目录树
+  const tree = buildTree(sortChanges(changes, sortMode));
 
   const onDiscardAll = async (): Promise<void> => {
     const ok = await confirm(`丢弃 ${changes.length} 个文件的更改？此操作不可恢复。`, {
