@@ -82,4 +82,24 @@ impl Git {
     pub fn run_stdout(&self, args: &[&str]) -> Result<String> {
         Ok(self.run_ok(args)?.stdout_string())
     }
+
+    /// 执行 git 命令并返回 stdout + stderr 合并文本（菜单类命令的通用封装）。
+    /// 非零退出码时把 stderr 原文（trim 后）作为错误返回，便于前端直接展示 git 的提示；
+    /// stderr 为空时回退到 stdout / 退出码说明。
+    pub fn run_msg(&self, args: &[&str]) -> Result<String> {
+        let out = self.run_raw(args)?;
+        if out.code == 0 {
+            return Ok(out.combined());
+        }
+        let stderr = out.stderr_string();
+        let stderr = stderr.trim();
+        if !stderr.is_empty() {
+            return Err(anyhow!(stderr.to_string()));
+        }
+        let combined = out.combined();
+        if combined.is_empty() {
+            return Err(anyhow!("git {} 失败（退出码 {}）", args.join(" "), out.code));
+        }
+        Err(anyhow!(combined))
+    }
 }

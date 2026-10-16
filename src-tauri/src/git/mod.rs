@@ -1,7 +1,12 @@
+pub mod clone;
 pub mod diff;
 pub mod exec;
 pub mod log;
 pub mod ops;
 pub mod refs;
+pub mod remotes;
+pub mod stash;
 pub mod status;
+pub mod tags;
 pub mod types;
+pub mod worktree;

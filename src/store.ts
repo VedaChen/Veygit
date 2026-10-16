@@ -42,6 +42,24 @@ export interface BranchPickerState {
   filter: string;
 }
 
+/** prompt 弹窗的选项项 */
+export interface PromptPickItem {
+  label: string;
+  description?: string;
+  value: string;
+}
+
+/** 当前 prompt 弹窗状态（internal：由 PromptHost 渲染） */
+export interface PromptState {
+  kind: 'input' | 'pick';
+  title: string;
+  placeholder?: string;
+  /** input 模式初始值 */
+  value?: string;
+  /** pick 模式选项 */
+  items?: PromptPickItem[];
+}
+
 interface AppStore {
   repos: RepoState[];
   activeRoot: string | null;
@@ -69,6 +87,32 @@ interface AppStore {
   settingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
   branchPicker: BranchPickerState | null;
+
+  // ---- 输入 / 选择弹窗（由 PromptHost 渲染） ----
+  /** 文本输入弹窗（返回 null = 用户取消） */
+  promptInput: (opts: {
+    title: string;
+    placeholder?: string;
+    value?: string;
+  }) => Promise<string | null>;
+  /** 单选列表弹窗（返回 null = 用户取消） */
+  promptPick: (opts: {
+    title: string;
+    placeholder?: string;
+    items: PromptPickItem[];
+  }) => Promise<string | null>;
+  /** 内部：当前 prompt 状态 */
+  prompt: PromptState | null;
+  /** 内部：用户提交/取消 prompt（由 PromptHost 调用） */
+  resolvePrompt: (value: string | null) => void;
+
+  // ---- GIT 输出面板 ----
+  /** GIT 输出面板内容（每次 git 操作追加；最多保留 500 行） */
+  output: string[];
+  appendOutput: (text: string) => void;
+  outputOpen: boolean;
+  setOutputOpen: (open: boolean) => void;
+  clearOutput: () => void;
 
   init: () => Promise<void>;
   openRepository: () => Promise<void>;
@@ -194,6 +238,12 @@ let initialized = false;
 // 刷新队列：watcher 事件风暴时保证不并发、不丢最后一次刷新
 const pendingRefreshes = new Set<string>();
 let refreshing = false;
+
+/** 当前 prompt 弹窗的 resolve 回调（提交/取消后单次生效） */
+let promptResolver: ((value: string | null) => void) | null = null;
+
+/** GIT 输出面板最多保留的行数（超出时截掉最旧的） */
+const OUTPUT_MAX_LINES = 500;
 
 function emptyRepoState(info: RepoInfo): RepoState {
   return {
@@ -352,6 +402,9 @@ export const useStore = create<AppStore>()((set, get) => {
     settingsOpen: false,
     setSettingsOpen: (open) => set({ settingsOpen: open }),
     branchPicker: null,
+    prompt: null,
+    output: [],
+    outputOpen: false,
 
     // ---- 图表（对照 VS Code SCM Graph） ----
     graphRepo: 'auto',
@@ -687,6 +740,70 @@ export const useStore = create<AppStore>()((set, get) => {
       }
       const name = branch.isRemote ? branch.name.split('/').slice(1).join('/') : branch.name;
       void get().checkout(p.repo, name, false);
+    },
+
+    // ---- 输入 / 选择弹窗 ----
+
+    promptInput(opts) {
+      return new Promise<string | null>((resolve) => {
+        // 若上一个弹窗尚未关闭，先按取消处理，避免其 Promise 永久挂起
+        promptResolver?.(null);
+        promptResolver = resolve;
+        set({
+          prompt: {
+            kind: 'input',
+            title: opts.title,
+            placeholder: opts.placeholder,
+            value: opts.value,
+          },
+        });
+      });
+    },
+
+    promptPick(opts) {
+      return new Promise<string | null>((resolve) => {
+        promptResolver?.(null);
+        promptResolver = resolve;
+        set({
+          prompt: {
+            kind: 'pick',
+            title: opts.title,
+            placeholder: opts.placeholder,
+            items: opts.items,
+          },
+        });
+      });
+    },
+
+    resolvePrompt(value) {
+      const resolve = promptResolver;
+      promptResolver = null;
+      set({ prompt: null });
+      resolve?.(value);
+    },
+
+    // ---- GIT 输出面板 ----
+
+    appendOutput(text) {
+      const lines = text.split(/\r?\n/);
+      // 丢弃末尾换行拆出的空串，避免多余空行
+      while (lines.length > 0 && lines[lines.length - 1] === '') {
+        lines.pop();
+      }
+      if (lines.length === 0) {
+        return;
+      }
+      set((state) => ({
+        output: [...state.output, ...lines].slice(-OUTPUT_MAX_LINES),
+      }));
+    },
+
+    setOutputOpen(open) {
+      set({ outputOpen: open });
+    },
+
+    clearOutput() {
+      set({ output: [] });
     },
 
     async loadBranches(root) {

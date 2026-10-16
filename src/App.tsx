@@ -7,6 +7,8 @@ import { DiffViewer } from './components/DiffViewer';
 import { StatusBar } from './components/StatusBar';
 import { BranchPicker } from './components/BranchPicker';
 import { SettingsPanel } from './components/SettingsPanel';
+import { PromptHost } from './components/PromptHost';
+import { OutputPanel } from './components/OutputPanel';
 
 export default function App() {
   const appearance = useStore((s) => s.appearance);
@@ -69,6 +71,8 @@ export default function App() {
       <StatusBar />
       <BranchPicker />
       <SettingsPanel />
+      <PromptHost />
+      <OutputPanel />
     </div>
   );
 }

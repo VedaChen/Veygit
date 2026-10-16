@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { confirm } from '@tauri-apps/plugin-dialog';
+import { runGitAction } from '../actions';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import type { FileChange } from '../types';
@@ -18,7 +19,6 @@ export function ChangesSection() {
   const setSortMode = useStore((s) => s.setSortMode);
   const activeRoot = useStore((s) => s.activeRoot);
   const setActive = useStore((s) => s.setActive);
-  const sync = useStore((s) => s.sync);
   const busy = useStore((s) => s.busy);
   const stage = useStore((s) => s.stage);
   const discard = useStore((s) => s.discard);
@@ -148,11 +148,12 @@ export function ChangesSection() {
             onViewMode: setViewMode,
             onSortMode: setSortMode,
             onSelectRepo: setActive,
-            onSync: (op) => void sync(repo.info.root, op),
+            onAction: (action) => void runGitAction(action, repo.info.root),
           })}
           x={menuPos.x}
           y={menuPos.y}
           onClose={() => setMenuPos(null)}
+          onAction={(action) => void runGitAction(action, repo.info.root)}
         />
       )}
     </section>

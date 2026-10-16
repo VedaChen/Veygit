@@ -174,12 +174,9 @@ pub fn checkout_detached(git: &Git, reference: &str) -> Result<String> {
     Ok(out.combined())
 }
 
+/// 抓取所有远程：git fetch --all（剪除语义单独走 fetch_prune）
 pub fn fetch(git: &Git) -> Result<String> {
-    let out = git.run_raw(&["fetch", "--all", "--prune"])?;
-    if out.code != 0 {
-        return Err(anyhow!(out.combined()));
-    }
-    Ok(out.combined())
+    git.run_msg(&["fetch", "--all"])
 }
 
 pub fn pull(git: &Git) -> Result<String> {
@@ -213,6 +210,85 @@ pub fn push(git: &Git) -> Result<String> {
         }
     }
     Err(anyhow!(out.combined()))
+}
+
+// ---------------------------------------------------------------------------
+// 菜单命令：提交 / 变基 / 拉取推送 / 分支
+// 失败时统一返回 git 的 stderr 原文（由 Git::run_msg 保证）
+// ---------------------------------------------------------------------------
+
+/// 提交全部改动：先 git add -A，再 git commit -m <message> [--amend] [--signoff]
+pub fn commit_all(git: &Git, message: &str, amend: bool, signed_off: bool) -> Result<String> {
+    git.run_msg(&["add", "-A"])?;
+
+    let mut args = vec!["commit", "-m", message];
+    if amend {
+        args.push("--amend");
+    }
+    if signed_off {
+        args.push("--signoff");
+    }
+    git.run_msg(&args)
+}
+
+/// 撤销上一次提交（改动保留在暂存区）：git reset --soft HEAD~1
+pub fn commit_undo(git: &Git) -> Result<String> {
+    git.run_msg(&["reset", "--soft", "HEAD~1"])
+}
+
+/// 中止进行中的变基：git rebase --abort
+pub fn rebase_abort(git: &Git) -> Result<String> {
+    git.run_msg(&["rebase", "--abort"])
+}
+
+/// 以变基方式拉取：git pull --rebase
+pub fn pull_rebase(git: &Git) -> Result<String> {
+    git.run_msg(&["pull", "--rebase"])
+}
+
+/// 从指定远程的分支拉取：git pull <remote> <branch>
+pub fn pull_from(git: &Git, remote: &str, branch: &str) -> Result<String> {
+    git.run_msg(&["pull", remote, branch])
+}
+
+/// 推送到指定远程分支：git push <remote> HEAD:<branch>
+pub fn push_to(git: &Git, remote: &str, branch: &str) -> Result<String> {
+    git.run_msg(&["push", remote, &format!("HEAD:{}", branch)])
+}
+
+/// 抓取并剪除远程已删除的引用：git fetch --prune
+pub fn fetch_prune(git: &Git) -> Result<String> {
+    git.run_msg(&["fetch", "--prune"])
+}
+
+/// 合并指定分支：git merge <branch>（冲突等失败时返回 stderr 原文）
+pub fn merge_branch(git: &Git, branch: &str) -> Result<String> {
+    git.run_msg(&["merge", branch])
+}
+
+/// 变基到指定分支：git rebase <branch>
+pub fn rebase_branch(git: &Git, branch: &str) -> Result<String> {
+    git.run_msg(&["rebase", branch])
+}
+
+/// 重命名当前分支：git branch -m <new_name>
+pub fn rename_branch(git: &Git, new_name: &str) -> Result<String> {
+    git.run_msg(&["branch", "-m", new_name])
+}
+
+/// 删除本地分支：force=false 用 -d（仅已合并），true 用 -D（强制）
+pub fn delete_branch(git: &Git, name: &str, force: bool) -> Result<String> {
+    git.run_msg(&["branch", if force { "-D" } else { "-d" }, name])
+}
+
+/// 删除远程分支：git push <remote> --delete <branch>
+pub fn delete_remote_branch(git: &Git, remote: &str, branch: &str) -> Result<String> {
+    git.run_msg(&["push", remote, "--delete", branch])
+}
+
+/// 发布分支（推送当前分支并建立跟踪）：git push -u <remote> HEAD
+pub fn publish_branch(git: &Git, remote: &str) -> Result<String> {
+    git.run_msg(&["push", "-u", remote, "HEAD"])
 }
 
 fn blob_exists_in_head(git: &Git, path: &str) -> bool {

@@ -69,3 +69,9 @@ export interface DiffContent {
   original: string;
   modified: string;
 }
+
+/** 储藏条目（对照 git stash list） */
+export interface StashInfo {
+  reference: string;
+  message: string;
+}

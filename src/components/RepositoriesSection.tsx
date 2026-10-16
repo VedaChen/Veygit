@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { runGitAction } from '../actions';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import { SectionHeader } from './Section';
@@ -107,12 +108,13 @@ function RepoItem({ repo }: { repo: RepoState }) {
           {menuPos && (
             <Menu
               entries={buildRepoMenu({
-                onSync: (op) => void sync(root, op),
+                onAction: (action) => void runGitAction(action, root),
                 onCloseRepo: () => void closeRepository(root),
               })}
               x={menuPos.x}
               y={menuPos.y}
               onClose={() => setMenuPos(null)}
+              onAction={(action) => void runGitAction(action, root)}
             />
           )}
         </span>

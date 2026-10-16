@@ -13,6 +13,8 @@ export interface MenuEntry {
   separator?: boolean;
   /** 子菜单（悬停自动展开） */
   children?: MenuEntry[];
+  /** 触发时回传给 onAction 的动作 id（叶子项） */
+  action?: string;
   /** 点击（叶子项）时的动作；未提供则仅关闭菜单 */
   onSelect?: () => void;
 }
@@ -23,13 +25,15 @@ export interface MenuProps {
   x: number;
   y: number;
   onClose: () => void;
+  /** 叶子项 action 回传（优先于 onSelect） */
+  onAction?: (action: string) => void;
 }
 
 /**
  * VS Code 风格级联下拉菜单：Portal 渲染到 body，fixed 定位在触发点下方；
  * 子菜单的显示/隐藏完全由 CSS（.flyout-item:hover > .flyout-sub）控制，无 JS hover 状态。
  */
-export function Menu({ entries, x, y, onClose }: MenuProps): ReactElement {
+export function Menu({ entries, x, y, onClose, onAction }: MenuProps): ReactElement {
   // 菜单宽约 264px、预估高 300px：越界时向内收，保证完整可见（顶部/左侧至少留 8px）
   const left = x + 264 > window.innerWidth ? window.innerWidth - 272 : x;
   const top = y + 300 > window.innerHeight ? Math.max(8, window.innerHeight - 308) : y;
@@ -37,7 +41,7 @@ export function Menu({ entries, x, y, onClose }: MenuProps): ReactElement {
   return createPortal(
     <div className="flyout-overlay" onMouseDown={onClose}>
       <div className="flyout-menu" style={{ left, top }} onMouseDown={(e) => e.stopPropagation()}>
-        <MenuEntries entries={entries} onClose={onClose} />
+        <MenuEntries entries={entries} onClose={onClose} onAction={onAction} />
       </div>
     </div>,
     document.body,
@@ -48,9 +52,11 @@ export function Menu({ entries, x, y, onClose }: MenuProps): ReactElement {
 function MenuEntries({
   entries,
   onClose,
+  onAction,
 }: {
   entries: MenuEntry[];
   onClose: () => void;
+  onAction?: (action: string) => void;
 }): ReactElement {
   return (
     <>
@@ -63,7 +69,11 @@ function MenuEntries({
           if (e.disabled || e.children) {
             return;
           }
-          e.onSelect?.();
+          if (e.action && onAction) {
+            onAction(e.action);
+          } else {
+            e.onSelect?.();
+          }
           onClose();
         };
 
@@ -80,7 +90,7 @@ function MenuEntries({
               <>
                 <i className="codicon codicon-chevron-right flyout-item-arrow" />
                 <div className="flyout-sub">
-                  <MenuEntries entries={e.children} onClose={onClose} />
+                  <MenuEntries entries={e.children} onClose={onClose} onAction={onAction} />
                 </div>
               </>
             )}
@@ -91,129 +101,133 @@ function MenuEntries({
   );
 }
 
-/** “拉取”到“显示 GIT 输出”的公共菜单段（存储库菜单与更改菜单共用） */
-function buildGitCommands(onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void): MenuEntry[] {
+/**
+ * “拉取”到“显示 GIT 输出”的公共菜单段（存储库菜单与更改菜单共用）；
+ * 叶子项一律用 action 字段承载动作 id，点击时由最外层 MenuEntries 回传给 onAction，
+ * 因此此处的 onAction 形参仅用于保持调用签名的统一（前缀 _ 表示参数有意不使用）。
+ */
+function buildGitCommands(_onAction: (action: string) => void): MenuEntry[] {
   return [
-    { label: '拉取', onSelect: () => onSync('pull') },
-    { label: '推送', onSelect: () => onSync('push') },
-    { label: '克隆' },
-    { label: '签出到...' },
-    { label: '抓取', onSelect: () => onSync('fetch') },
+    { label: '拉取', action: 'pull' },
+    { label: '推送', action: 'push' },
+    { label: '克隆', action: 'clone' },
+    { label: '签出到...', action: 'checkoutTo' },
+    { label: '抓取', action: 'fetch' },
     { separator: true },
     {
       label: '提交',
       children: [
-        { label: '提交' },
-        { label: '提交已暂存文件' },
-        { label: '全部提交', shortcut: 'Ctrl+Alt+K' },
-        { label: '撤消上次提交' },
+        { label: '提交', action: 'commit' },
+        { label: '提交已暂存文件', action: 'commitStaged' },
+        { label: '全部提交', shortcut: 'Ctrl+Alt+K', action: 'commitAll' },
+        { label: '撤消上次提交', action: 'commitUndo' },
         { label: '中止变基', disabled: true },
         { separator: true },
-        { label: '提交(修改)' },
-        { label: '提交已暂存文件(修改)' },
-        { label: '全部提交(修改)' },
+        { label: '提交(修改)', action: 'commitAmend' },
+        { label: '提交已暂存文件(修改)', action: 'commitStagedAmend' },
+        { label: '全部提交(修改)', action: 'commitAllAmend' },
         { separator: true },
-        { label: '提交(已署名)' },
-        { label: '提交已暂存文件(已署名)' },
-        { label: '全部提交(已署名)' },
+        { label: '提交(已署名)', action: 'commitSignedOff' },
+        { label: '提交已暂存文件(已署名)', action: 'commitStagedSignedOff' },
+        { label: '全部提交(已署名)', action: 'commitAllSignedOff' },
       ],
     },
     {
       label: '更改',
       children: [
-        { label: '暂存所有更改' },
-        { label: '取消暂存所有更改' },
-        { label: '放弃所有更改' },
+        { label: '暂存所有更改', action: 'stageAll' },
+        { label: '取消暂存所有更改', action: 'unstageAll' },
+        { label: '放弃所有更改', action: 'discardAll' },
       ],
     },
     {
       label: '拉取，推送',
       children: [
-        { label: '同步', shortcut: 'Ctrl+T', onSelect: () => onSync('sync') },
+        { label: '同步', shortcut: 'Ctrl+T', action: 'sync' },
         { separator: true },
-        { label: '拉取', onSelect: () => onSync('pull') },
-        { label: '拉取(变基)' },
-        { label: '拉取自...' },
+        { label: '拉取', action: 'pull' },
+        { label: '拉取(变基)', action: 'pullRebase' },
+        { label: '拉取自...', action: 'pullFrom' },
         { separator: true },
-        { label: '推送', onSelect: () => onSync('push') },
-        { label: '推送到...', shortcut: 'Ctrl+Shift+K' },
+        { label: '推送', action: 'push' },
+        { label: '推送到...', shortcut: 'Ctrl+Shift+K', action: 'pushTo' },
         { separator: true },
-        { label: '抓取', onSelect: () => onSync('fetch') },
-        { label: '抓取(剪除)' },
-        { label: '从所有远程存储库中抓取', onSelect: () => onSync('fetch') },
+        { label: '抓取', action: 'fetch' },
+        { label: '抓取(剪除)', action: 'fetchPrune' },
+        { label: '从所有远程存储库中抓取', action: 'fetchAll' },
       ],
     },
     {
       label: '分支',
       children: [
-        { label: '合并...' },
-        { label: '变基分支...' },
+        { label: '合并...', action: 'merge' },
+        { label: '变基分支...', action: 'rebase' },
         { separator: true },
-        { label: '创建分支...' },
-        { label: '从现有来源创建新的分支...' },
+        { label: '创建分支...', action: 'createBranch' },
+        { label: '从现有来源创建新的分支...', action: 'createBranchFrom' },
         { separator: true },
-        { label: '重命名分支...' },
-        { label: '删除分支...' },
-        { label: '删除远程分支...' },
+        { label: '重命名分支...', action: 'renameBranch' },
+        { label: '删除分支...', action: 'deleteBranch' },
+        { label: '删除远程分支...', action: 'deleteRemoteBranch' },
         { separator: true },
-        { label: '发布分支...' },
+        { label: '发布分支...', action: 'publishBranch' },
       ],
     },
     {
       label: '远程',
       children: [
-        { label: '添加远程存储库...' },
-        { label: '删除远程存储库' },
+        { label: '添加远程存储库...', action: 'remoteAdd' },
+        { label: '删除远程存储库', action: 'remoteRemove' },
       ],
     },
     {
       label: '存储',
       children: [
-        { label: '储藏' },
-        { label: '储藏(包含未跟踪)' },
-        { label: '储藏暂存' },
+        { label: '储藏', action: 'stash' },
+        { label: '储藏(包含未跟踪)', action: 'stashIncludeUntracked' },
+        { label: '储藏暂存', action: 'stashStaged' },
         { separator: true },
-        { label: '应用最新储藏' },
-        { label: '应用储藏...' },
+        { label: '应用最新储藏', action: 'stashApplyLatest' },
+        { label: '应用储藏...', action: 'stashApply' },
         { separator: true },
-        { label: '弹出最新储藏' },
-        { label: '弹出储藏...' },
+        { label: '弹出最新储藏', action: 'stashPopLatest' },
+        { label: '弹出储藏...', action: 'stashPop' },
         { separator: true },
-        { label: '删除储藏...' },
-        { label: '删除所有储藏...' },
+        { label: '删除储藏...', action: 'stashDrop' },
+        { label: '删除所有储藏...', action: 'stashDropAll' },
         { separator: true },
-        { label: '查看储藏条目...' },
+        { label: '查看储藏条目...', action: 'stashView' },
       ],
     },
     {
       label: '标记',
       children: [
-        { label: '创建标记...' },
-        { label: '删除标签...' },
-        { label: '删除远程标记...' },
+        { label: '创建标记...', action: 'tagCreate' },
+        { label: '删除标签...', action: 'tagDelete' },
+        { label: '删除远程标记...', action: 'tagDeleteRemote' },
         { separator: true },
-        { label: '推送标记' },
+        { label: '推送标记', action: 'tagPush' },
       ],
     },
     {
       label: '工作树',
-      children: [{ label: '创建工作树...' }],
+      children: [{ label: '创建工作树...', action: 'worktreeCreate' }],
     },
     { separator: true },
-    { label: '显示 GIT 输出' },
+    { label: '显示 GIT 输出', action: 'showGitOutput' },
   ];
 }
 
 /** 存储库“更多操作”级联菜单数据工厂（对照 VS Code 源代码管理存储库视图） */
 export function buildRepoMenu({
-  onSync,
+  onAction,
   onCloseRepo,
 }: {
-  onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void;
+  onAction: (action: string) => void;
   onCloseRepo: () => void;
 }): MenuEntry[] {
   return [
-    ...buildGitCommands(onSync),
+    ...buildGitCommands(onAction),
     { separator: true },
     { label: '关闭存储库', onSelect: onCloseRepo },
   ];
@@ -234,7 +248,7 @@ export interface ChangesMenuOptions {
   onViewMode: (mode: 'list' | 'tree') => void;
   onSortMode: (mode: 'path' | 'name' | 'status') => void;
   onSelectRepo: (root: string) => void;
-  onSync: (op: 'fetch' | 'pull' | 'push' | 'sync') => void;
+  onAction: (action: string) => void;
 }
 
 /** “更改”标题栏 ⋯ 菜单数据工厂（对照 VS Code 源代码管理 SCM 视图菜单） */
@@ -265,6 +279,6 @@ export function buildChangesMenu(opts: ChangesMenuOptions): MenuEntry[] {
       ],
     },
     { separator: true },
-    ...buildGitCommands(opts.onSync),
+    ...buildGitCommands(opts.onAction),
   ];
 }

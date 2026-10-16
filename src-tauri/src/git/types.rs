@@ -90,3 +90,13 @@ pub struct DiffContent {
     pub original: String,
     pub modified: String,
 }
+
+/// 储藏条目（对照 git stash list）
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct StashInfo {
+    /// 储藏引用，形如 stash@{0}
+    pub reference: String,
+    /// 储藏说明（git stash list 的第一行 subject，如 "WIP on main: ..."）
+    pub message: String,
+}

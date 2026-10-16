@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::git::types::*;
-use crate::git::{diff, exec::Git, log, ops, refs, status};
+use crate::git::{clone, diff, exec::Git, log, ops, refs, remotes, stash, status, tags, worktree};
 use crate::state::{start_watcher, AppState, RepoSession};
 
 type CmdResult<T> = Result<T, String>;
@@ -195,6 +195,301 @@ pub async fn pull(state: State<'_, AppState>, repo: String) -> CmdResult<String>
 #[tauri::command]
 pub async fn push(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
     with_repo(&state, &repo, ops::push)
+}
+
+// ---------------------------------------------------------------------------
+// 菜单命令：提交 / 变基 / 拉取推送 / 分支
+// ---------------------------------------------------------------------------
+
+/// 提交全部改动（先 git add -A 再 commit），支持 --amend 与 --signoff
+#[tauri::command]
+pub async fn commit_all(
+    state: State<'_, AppState>,
+    repo: String,
+    message: String,
+    amend: bool,
+    signed_off: bool,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| {
+        ops::commit_all(git, &message, amend, signed_off)
+    })
+}
+
+/// 撤销上一次提交（git reset --soft HEAD~1，改动回到暂存区）
+#[tauri::command]
+pub async fn commit_undo(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
+    with_repo(&state, &repo, ops::commit_undo)
+}
+
+/// 中止进行中的变基（git rebase --abort）
+#[tauri::command]
+pub async fn rebase_abort(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
+    with_repo(&state, &repo, ops::rebase_abort)
+}
+
+/// 以变基方式拉取（git pull --rebase）
+#[tauri::command]
+pub async fn pull_rebase(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
+    with_repo(&state, &repo, ops::pull_rebase)
+}
+
+/// 从指定远程的分支拉取（git pull <remote> <branch>）
+#[tauri::command]
+pub async fn pull_from(
+    state: State<'_, AppState>,
+    repo: String,
+    remote: String,
+    branch: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::pull_from(git, &remote, &branch))
+}
+
+/// 推送到指定远程分支（git push <remote> HEAD:<branch>）
+#[tauri::command]
+pub async fn push_to(
+    state: State<'_, AppState>,
+    repo: String,
+    remote: String,
+    branch: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::push_to(git, &remote, &branch))
+}
+
+/// 抓取并剪除远程已删除的引用（git fetch --prune）
+#[tauri::command]
+pub async fn fetch_prune(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
+    with_repo(&state, &repo, ops::fetch_prune)
+}
+
+/// 合并指定分支（git merge <branch>，冲突时返回 git 的 stderr 原文）
+#[tauri::command]
+pub async fn merge_branch(
+    state: State<'_, AppState>,
+    repo: String,
+    branch: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::merge_branch(git, &branch))
+}
+
+/// 变基到指定分支（git rebase <branch>）
+#[tauri::command]
+pub async fn rebase_branch(
+    state: State<'_, AppState>,
+    repo: String,
+    branch: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::rebase_branch(git, &branch))
+}
+
+/// 重命名当前分支（git branch -m <new_name>）
+#[tauri::command]
+pub async fn rename_branch(
+    state: State<'_, AppState>,
+    repo: String,
+    new_name: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::rename_branch(git, &new_name))
+}
+
+/// 删除本地分支（force=false 用 -d，true 用 -D）
+#[tauri::command]
+pub async fn delete_branch(
+    state: State<'_, AppState>,
+    repo: String,
+    name: String,
+    force: bool,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::delete_branch(git, &name, force))
+}
+
+/// 删除远程分支（git push <remote> --delete <branch>）
+#[tauri::command]
+pub async fn delete_remote_branch(
+    state: State<'_, AppState>,
+    repo: String,
+    remote: String,
+    branch: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| {
+        ops::delete_remote_branch(git, &remote, &branch)
+    })
+}
+
+/// 发布分支：推送当前分支并建立跟踪（git push -u <remote> HEAD）
+#[tauri::command]
+pub async fn publish_branch(
+    state: State<'_, AppState>,
+    repo: String,
+    remote: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| ops::publish_branch(git, &remote))
+}
+
+// ---------------------------------------------------------------------------
+// 菜单命令：远端管理
+// ---------------------------------------------------------------------------
+
+/// 列出已配置的远程名（git remote，逐行）
+#[tauri::command]
+pub async fn list_remotes(state: State<'_, AppState>, repo: String) -> CmdResult<Vec<String>> {
+    with_repo(&state, &repo, remotes::list_remotes)
+}
+
+/// 添加远程（git remote add <name> <url>）
+#[tauri::command]
+pub async fn remote_add(
+    state: State<'_, AppState>,
+    repo: String,
+    name: String,
+    url: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| remotes::remote_add(git, &name, &url))
+}
+
+/// 删除远程（git remote remove <name>）
+#[tauri::command]
+pub async fn remote_remove(
+    state: State<'_, AppState>,
+    repo: String,
+    name: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| remotes::remote_remove(git, &name))
+}
+
+// ---------------------------------------------------------------------------
+// 菜单命令：储藏
+// ---------------------------------------------------------------------------
+
+/// 储藏当前改动（git stash push [-u] [--staged]）
+#[tauri::command]
+pub async fn stash_push(
+    state: State<'_, AppState>,
+    repo: String,
+    include_untracked: bool,
+    staged: bool,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| {
+        stash::stash_push(git, include_untracked, staged)
+    })
+}
+
+/// 列出储藏条目（结构化 JSON：Vec<StashInfo>）
+#[tauri::command]
+pub async fn stash_list(state: State<'_, AppState>, repo: String) -> CmdResult<Vec<StashInfo>> {
+    with_repo(&state, &repo, stash::stash_list)
+}
+
+/// 应用储藏（git stash apply <reference>，条目保留）
+#[tauri::command]
+pub async fn stash_apply(
+    state: State<'_, AppState>,
+    repo: String,
+    reference: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| stash::stash_apply(git, &reference))
+}
+
+/// 弹出储藏（git stash pop <reference>，应用后删除条目）
+#[tauri::command]
+pub async fn stash_pop(
+    state: State<'_, AppState>,
+    repo: String,
+    reference: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| stash::stash_pop(git, &reference))
+}
+
+/// 删除单个储藏条目（git stash drop <reference>）
+#[tauri::command]
+pub async fn stash_drop(
+    state: State<'_, AppState>,
+    repo: String,
+    reference: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| stash::stash_drop(git, &reference))
+}
+
+/// 清空所有储藏条目（git stash clear）
+#[tauri::command]
+pub async fn stash_clear(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
+    with_repo(&state, &repo, stash::stash_clear)
+}
+
+/// 以 patch 形式查看储藏内容（git stash show -p <reference>）
+#[tauri::command]
+pub async fn stash_show(
+    state: State<'_, AppState>,
+    repo: String,
+    reference: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| stash::stash_show(git, &reference))
+}
+
+// ---------------------------------------------------------------------------
+// 菜单命令：标签
+// ---------------------------------------------------------------------------
+
+/// 创建轻量标签（git tag <name>）
+#[tauri::command]
+pub async fn tag_create(
+    state: State<'_, AppState>,
+    repo: String,
+    name: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| tags::tag_create(git, &name))
+}
+
+/// 删除本地标签（git tag -d <name>）
+#[tauri::command]
+pub async fn tag_delete(
+    state: State<'_, AppState>,
+    repo: String,
+    name: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| tags::tag_delete(git, &name))
+}
+
+/// 删除远程标签（git push <remote> --delete refs/tags/<name>）
+#[tauri::command]
+pub async fn tag_delete_remote(
+    state: State<'_, AppState>,
+    repo: String,
+    remote: String,
+    name: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| {
+        tags::tag_delete_remote(git, &remote, &name)
+    })
+}
+
+/// 推送所有本地标签（git push <remote> --tags）
+#[tauri::command]
+pub async fn tag_push(
+    state: State<'_, AppState>,
+    repo: String,
+    remote: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| tags::tag_push(git, &remote))
+}
+
+// ---------------------------------------------------------------------------
+// 菜单命令：工作树 / 克隆
+// ---------------------------------------------------------------------------
+
+/// 创建工作树（git worktree add <path>）
+#[tauri::command]
+pub async fn worktree_add(
+    state: State<'_, AppState>,
+    repo: String,
+    path: String,
+) -> CmdResult<String> {
+    with_repo(&state, &repo, |git| worktree::worktree_add(git, &path))
+}
+
+/// 克隆远程仓库（git clone <url> <target>，target 为完整本地路径）
+#[tauri::command]
+pub async fn clone_repository(url: String, target: String) -> CmdResult<String> {
+    clone::clone_repository(&url, &target).map_err(err)
 }
 
 /// 读取提交历史。refs 为空时只看 HEAD；可传 ["--all"] 或分支/引用名（如 "origin/dev"）

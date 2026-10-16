@@ -7,6 +7,7 @@ import type {
   DiffContent,
   RepoInfo,
   RepositoryStatus,
+  StashInfo,
 } from './types';
 
 export const api = {
@@ -75,4 +76,104 @@ export const api = {
 
   getCommitFileDiff: (repo: string, hash: string, path: string) =>
     invoke<DiffContent>('get_commit_file_diff', { repo, hash, path }),
+
+  // ---- 提交（全部提交 / 撤销上一次提交） ----
+
+  commitAll: (
+    repo: string,
+    message: string,
+    amend: boolean,
+    signedOff: boolean,
+  ) => invoke<string>('commit_all', { repo, message, amend, signedOff }),
+
+  commitUndo: (repo: string) => invoke<string>('commit_undo', { repo }),
+
+  // ---- 变基 ----
+
+  rebaseAbort: (repo: string) => invoke<string>('rebase_abort', { repo }),
+
+  // ---- 拉取 / 推送（指定远端） ----
+
+  pullRebase: (repo: string) => invoke<string>('pull_rebase', { repo }),
+
+  pullFrom: (repo: string, remote: string, branch: string) =>
+    invoke<string>('pull_from', { repo, remote, branch }),
+
+  pushTo: (repo: string, remote: string, branch: string) =>
+    invoke<string>('push_to', { repo, remote, branch }),
+
+  fetchPrune: (repo: string) => invoke<string>('fetch_prune', { repo }),
+
+  // ---- 分支（合并 / 变基 / 重命名 / 删除 / 发布） ----
+
+  mergeBranch: (repo: string, branch: string) =>
+    invoke<string>('merge_branch', { repo, branch }),
+
+  rebaseBranch: (repo: string, branch: string) =>
+    invoke<string>('rebase_branch', { repo, branch }),
+
+  renameBranch: (repo: string, newName: string) =>
+    invoke<string>('rename_branch', { repo, newName }),
+
+  deleteBranch: (repo: string, name: string, force: boolean) =>
+    invoke<string>('delete_branch', { repo, name, force }),
+
+  deleteRemoteBranch: (repo: string, remote: string, branch: string) =>
+    invoke<string>('delete_remote_branch', { repo, remote, branch }),
+
+  publishBranch: (repo: string, remote: string) =>
+    invoke<string>('publish_branch', { repo, remote }),
+
+  // ---- 远端管理 ----
+
+  listRemotes: (repo: string) => invoke<string[]>('list_remotes', { repo }),
+
+  remoteAdd: (repo: string, name: string, url: string) =>
+    invoke<string>('remote_add', { repo, name, url }),
+
+  remoteRemove: (repo: string, name: string) =>
+    invoke<string>('remote_remove', { repo, name }),
+
+  // ---- 储藏 ----
+
+  stashPush: (repo: string, includeUntracked: boolean, staged: boolean) =>
+    invoke<string>('stash_push', { repo, includeUntracked, staged }),
+
+  stashList: (repo: string) => invoke<StashInfo[]>('stash_list', { repo }),
+
+  stashApply: (repo: string, reference: string) =>
+    invoke<string>('stash_apply', { repo, reference }),
+
+  stashPop: (repo: string, reference: string) =>
+    invoke<string>('stash_pop', { repo, reference }),
+
+  stashDrop: (repo: string, reference: string) =>
+    invoke<string>('stash_drop', { repo, reference }),
+
+  stashClear: (repo: string) => invoke<string>('stash_clear', { repo }),
+
+  stashShow: (repo: string, reference: string) =>
+    invoke<string>('stash_show', { repo, reference }),
+
+  // ---- 标签 ----
+
+  tagCreate: (repo: string, name: string) =>
+    invoke<string>('tag_create', { repo, name }),
+
+  tagDelete: (repo: string, name: string) =>
+    invoke<string>('tag_delete', { repo, name }),
+
+  tagDeleteRemote: (repo: string, remote: string, name: string) =>
+    invoke<string>('tag_delete_remote', { repo, remote, name }),
+
+  tagPush: (repo: string, remote: string) =>
+    invoke<string>('tag_push', { repo, remote }),
+
+  // ---- 工作树 / 克隆 ----
+
+  worktreeAdd: (repo: string, path: string) =>
+    invoke<string>('worktree_add', { repo, path }),
+
+  cloneRepository: (url: string, target: string) =>
+    invoke<string>('clone_repository', { url, target }),
 };

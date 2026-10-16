@@ -336,6 +336,13 @@ i.codicon {
   overflow: hidden;
 }
 
+/* prompt 弹窗标题（挂载在 .picker 容器内、.picker-input-row 之前） */
+.picker-title {
+  padding: 6px 10px 2px;
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+
 .picker-input-row {
   display: flex;
   align-items: center;
@@ -1458,4 +1465,69 @@ i.codicon {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--fg-on-accent);
+}
+
+/* ---------- GIT 输出面板（底部抽屉） ---------- */
+
+/* 面板主体：固定于窗口底部，纵向布局（头部 + 可滚动输出区） */
+.output-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 220px;
+  z-index: 940;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-editor);
+  border-top: 1px solid var(--border-menu);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 面板头部：左侧标题、右侧操作按钮，高度固定不随内容伸缩 */
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 6px 0 12px;
+  font-size: 12px;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 头部操作按钮组（兼容 output-actions 类名，横排紧凑排列） */
+.output-header-actions,
+.output-actions {
+  display: flex;
+  gap: 2px;
+}
+
+/* 输出内容区：占满剩余高度，等宽字体、保留换行与缩进 */
+.output-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 12px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 输出区滚动条（对齐 VS Code 风格，使用主题滚动条变量） */
+.output-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.output-body::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 5px;
+}
+
+.output-body::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
 }
