@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import { SectionHeader } from './Section';
+import { Menu, buildRepoMenu } from './Menu';
 
 export function RepositoriesSection() {
   const repos = useStore((s) => s.repos);
@@ -46,7 +47,8 @@ function RepoItem({ repo }: { repo: RepoState }) {
   const sync = useStore((s) => s.sync);
   const openBranchPicker = useStore((s) => s.openBranchPicker);
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  // “更多操作”级联菜单的屏幕坐标（null 表示未打开）
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   const root = repo.info.root;
   const status = repo.status;
@@ -60,14 +62,6 @@ function RepoItem({ repo }: { repo: RepoState }) {
     : 0;
 
   const branchLabel = status ? (status.branch ?? 'HEAD 已分离') : '…';
-
-  // 同步按钮图标随 ahead/behind 变化（对照 VS Code 的 Sync Changes 图标）
-  const syncIcon =
-    status && status.ahead > 0 && status.behind > 0
-      ? 'codicon-sync'
-      : status && status.ahead > 0
-        ? 'codicon-cloud-upload'
-        : 'codicon-cloud-download';
 
   return (
     <div className={`repo-item${active ? ' active' : ''}`} onClick={() => setActive(root)}>
@@ -97,68 +91,30 @@ function RepoItem({ repo }: { repo: RepoState }) {
             title="同步更改（拉取 + 推送）"
             onClick={() => void sync(root, 'sync')}
           >
-            <i className={`codicon ${syncIcon}`} />
+            <i className="codicon codicon-sync" />
           </button>
-          <div className="menu-anchor">
-            <button
-              className="icon-btn small"
-              title="更多操作"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <i className="codicon codicon-ellipsis" />
-            </button>
-            {menuOpen && (
-              <div className="menu" onMouseLeave={() => setMenuOpen(false)}>
-                <button
-                  className="menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    void openBranchPicker(root);
-                  }}
-                >
-                  <i className="codicon codicon-git-branch" /> 切换分支...
-                </button>
-                <div className="menu-sep" />
-                <button
-                  className="menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    void sync(root, 'fetch');
-                  }}
-                >
-                  <i className="codicon codicon-cloud-download" /> 获取 (Fetch)
-                </button>
-                <button
-                  className="menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    void sync(root, 'pull');
-                  }}
-                >
-                  <i className="codicon codicon-arrow-down" /> 拉取 (Pull)
-                </button>
-                <button
-                  className="menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    void sync(root, 'push');
-                  }}
-                >
-                  <i className="codicon codicon-arrow-up" /> 推送 (Push)
-                </button>
-                <div className="menu-sep" />
-                <button
-                  className="menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    void closeRepository(root);
-                  }}
-                >
-                  <i className="codicon codicon-close" /> 关闭存储库
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            className="icon-btn small"
+            title="更多操作"
+            onClick={(e) => {
+              e.stopPropagation();
+              const r = e.currentTarget.getBoundingClientRect();
+              setMenuPos({ x: r.left, y: r.bottom + 4 });
+            }}
+          >
+            <i className="codicon codicon-ellipsis" />
+          </button>
+          {menuPos && (
+            <Menu
+              entries={buildRepoMenu({
+                onSync: (op) => void sync(root, op),
+                onCloseRepo: () => void closeRepository(root),
+              })}
+              x={menuPos.x}
+              y={menuPos.y}
+              onClose={() => setMenuPos(null)}
+            />
+          )}
         </span>
       </div>
     </div>
