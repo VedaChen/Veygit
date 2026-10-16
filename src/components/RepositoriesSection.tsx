@@ -63,6 +63,8 @@ function RepoItem({ repo }: { repo: RepoState }) {
     : 0;
 
   const branchLabel = status ? (status.branch ?? 'HEAD 已分离') : '…';
+  const ahead = status?.ahead ?? 0;
+  const behind = status?.behind ?? 0;
 
   return (
     <div className={`repo-item${active ? ' active' : ''}`} onClick={() => setActive(root)}>
@@ -88,11 +90,27 @@ function RepoItem({ repo }: { repo: RepoState }) {
         </button>
         <span className="repo-actions" onClick={(e) => e.stopPropagation()}>
           <button
-            className="icon-btn small"
+            className="icon-btn small repo-sync-btn"
             title="同步更改（拉取 + 推送）"
             onClick={() => void sync(root, 'sync')}
           >
             <i className="codicon codicon-sync" />
+            {(ahead > 0 || behind > 0) && (
+              <span className="sync-counts">
+                {ahead > 0 && (
+                  <span className="sync-ahead" title={`${ahead} 个提交待推送`}>
+                    <i className="codicon codicon-arrow-up" />
+                    {ahead}
+                  </span>
+                )}
+                {behind > 0 && (
+                  <span className="sync-behind" title={`${behind} 个提交待拉取`}>
+                    <i className="codicon codicon-arrow-down" />
+                    {behind}
+                  </span>
+                )}
+              </span>
+            )}
           </button>
           <button
             className="icon-btn small"
