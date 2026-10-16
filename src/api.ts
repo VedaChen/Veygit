@@ -72,4 +72,7 @@ export const api = {
 
   getCommitFiles: (repo: string, hash: string) =>
     invoke<CommitFile[]>('get_commit_files', { repo, hash }),
+
+  getCommitFileDiff: (repo: string, hash: string, path: string) =>
+    invoke<DiffContent>('get_commit_file_diff', { repo, hash, path }),
 };

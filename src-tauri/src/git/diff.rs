@@ -46,30 +46,46 @@ pub fn get_diff(
         (original, modified)
     };
 
+    Ok(assemble(original, modified))
+}
+
+/// 某提交中指定文件的 diff 两侧内容：父提交中的版本 vs 该提交中的版本，
+/// 供历史视图的 Monaco diff 编辑器渲染（结构与 get_diff 一致）。
+/// 命令失败时（根提交没有父、或该路径在对应版本中不存在）对应一侧以空内容呈现。
+pub fn get_commit_file_diff(git: &Git, hash: &str, path: &str) -> Result<DiffContent> {
+    // 该提交中的版本（文件在该提交中被删除时为空）
+    let modified = load_blob(git, &format!("{}:{}", hash, path))?;
+    // 父提交中的版本（根提交没有父、或该路径在父提交中不存在时为空）
+    let original = load_blob(git, &format!("{}^:{}", hash, path))?;
+    Ok(assemble(original, modified))
+}
+
+/// 把两侧加载结果转换为 DiffContent：超大 → tooLarge，含二进制字节 → binary，否则按文本返回
+fn assemble(original: Loaded, modified: Loaded) -> DiffContent {
     if matches!(original, Loaded::TooLarge) || matches!(modified, Loaded::TooLarge) {
-        return Ok(DiffContent {
+        return DiffContent {
             kind: "tooLarge".to_string(),
             original: String::new(),
             modified: String::new(),
-        });
+        };
     }
 
     let original = original.into_bytes();
     let modified = modified.into_bytes();
 
     if is_binary(&original) || is_binary(&modified) {
-        return Ok(DiffContent {
+        return DiffContent {
             kind: "binary".to_string(),
             original: String::new(),
             modified: String::new(),
-        });
+        };
     }
 
-    Ok(DiffContent {
+    DiffContent {
         kind: "text".to_string(),
         original: String::from_utf8_lossy(&original).into_owned(),
         modified: String::from_utf8_lossy(&modified).into_owned(),
-    })
+    }
 }
 
 /// 单个提交的 patch（含 commit 头部信息），供历史视图展示。

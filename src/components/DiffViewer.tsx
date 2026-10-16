@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { languageFor, monaco } from '../monaco-setup';
-import { useStore, type Selection } from '../store';
+import { useStore } from '../store';
 import type { DiffContent } from '../types';
 import { splitPath } from '../util';
 
@@ -18,19 +18,31 @@ export function DiffViewer() {
   }
 
   if (selection.kind === 'commit') {
+    // 提交中的单个文件：与未提交更改一样使用双栏 diff（内容由 store 的 selectCommitFile 加载到全局 diff）
+    if (selection.file) {
+      if (diff === null) {
+        return <EmptyState icon="codicon-loading spinning" text="加载差异中..." />;
+      }
+      if (diff.kind === 'binary') {
+        return <EmptyState icon="codicon-file-binary" text="二进制文件，无法预览差异" />;
+      }
+      if (diff.kind === 'tooLarge') {
+        return <EmptyState icon="codicon-warning" text="文件过大，无法预览差异" />;
+      }
+      return (
+        <DiffView
+          path={selection.file}
+          rightLabel={selection.hash.slice(0, 7)}
+          diff={diff}
+        />
+      );
+    }
+    // 无 file：保持整个提交的 patch 视图
     if (patch === null) {
       return <EmptyState icon="codicon-loading spinning" text="加载提交中..." />;
     }
-    // 选中提交中的某个文件时显示文件名，否则显示整个提交
-    const label = selection.file
-      ? `${splitPath(selection.file).name} (${selection.hash.slice(0, 7)})`
-      : `提交 ${selection.subject}`;
     return (
-      <PatchView
-        title={label}
-        icon={selection.file ? 'codicon-file' : 'codicon-git-commit'}
-        patch={patch}
-      />
+      <PatchView title={`提交 ${selection.subject}`} icon="codicon-git-commit" patch={patch} />
     );
   }
 
@@ -43,7 +55,13 @@ export function DiffViewer() {
   if (diff.kind === 'tooLarge') {
     return <EmptyState icon="codicon-warning" text="文件过大，无法预览差异" />;
   }
-  return <DiffView selection={selection} diff={diff} />;
+  return (
+    <DiffView
+      path={selection.path}
+      rightLabel={selection.staged ? '索引' : '工作树'}
+      diff={diff}
+    />
+  );
 }
 
 function EmptyState({ icon, text }: { icon: string; text: string }) {
@@ -56,20 +74,19 @@ function EmptyState({ icon, text }: { icon: string; text: string }) {
 }
 
 function DiffView({
-  selection,
+  path,
+  rightLabel,
   diff,
 }: {
-  selection: Extract<Selection, { kind: 'change' }>;
+  path: string;
+  rightLabel: string;
   diff: DiffContent;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
 
   const closeSelection = useStore((s) => s.clearSelection);
-  const { name } = splitPath(selection.path);
-
-  // 右侧文档的描述：staged 时是索引，否则是工作树（untracked 同样属于工作树）
-  const rightLabel = selection.staged ? '索引' : '工作树';
+  const { name } = splitPath(path);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -101,7 +118,7 @@ function DiffView({
     if (!editor) {
       return;
     }
-    const lang = languageFor(selection.path);
+    const lang = languageFor(path);
     const original = monaco.editor.createModel(diff.original, lang);
     const modified = monaco.editor.createModel(diff.modified, lang);
     editor.setModel({ original, modified });
@@ -116,17 +133,16 @@ function DiffView({
       original.dispose();
       modified.dispose();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [diff, selection.path]);
+  }, [diff, path]);
 
   return (
     <div className="diff-view">
       <div className="tab-bar">
-        <div className="tab" title={selection.path}>
+        <div className="tab" title={path}>
           <i className="codicon codicon-file" />
           <span className="tab-name">{name}</span>
         </div>
-        <div className="tab active" title={selection.path}>
+        <div className="tab active" title={path}>
           <i className="codicon codicon-file" />
           <span className="tab-name">{`${name} (${rightLabel})`}</span>
           <button className="tab-close" title="关闭" onClick={() => closeSelection()}>

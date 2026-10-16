@@ -233,3 +233,16 @@ pub async fn get_commit_patch(
         diff::commit_patch(git, &hash, path.as_deref())
     })
 }
+
+/// 某提交中某文件的双栏对比内容（父提交版本 vs 该提交版本），供 Monaco diff 编辑器渲染
+#[tauri::command]
+pub async fn get_commit_file_diff(
+    state: State<'_, AppState>,
+    repo: String,
+    hash: String,
+    path: String,
+) -> CmdResult<DiffContent> {
+    with_repo(&state, &repo, |git| {
+        diff::get_commit_file_diff(git, &hash, &path)
+    })
+}

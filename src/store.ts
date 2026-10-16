@@ -118,7 +118,7 @@ interface AppStore {
   commitFiles: Record<string, CommitFile[]>;
   /** 展开/收起提交（展开时懒加载文件列表） */
   toggleCommitExpand: (repo: string, hash: string) => Promise<void>;
-  /** 打开提交中某文件的 patch（右侧显示） */
+  /** 打开提交中某文件的 diff 内容（右侧显示） */
   selectCommitFile: (repo: string, hash: string, subject: string, file: CommitFile) => Promise<void>;
 }
 
@@ -529,16 +529,23 @@ export const useStore = create<AppStore>()((set, get) => {
     },
 
     async selectCommitFile(repo, hash, subject, file) {
+      // 先进入加载态：设置选择并清空当前 diff/patch
       set({
         selection: { kind: 'commit', repo, hash, subject, file: file.path },
         diff: null,
         patch: null,
       });
       try {
-        const patch = await api.getCommitPatch(repo, hash, file.path);
+        const diff = await api.getCommitFileDiff(repo, hash, file.path);
+        // 竞态校验：加载完成时用户可能已切换选择
         const current = get().selection;
-        if (current?.kind === 'commit' && current.hash === hash && current.file === file.path) {
-          set({ patch });
+        if (
+          current?.kind === 'commit' &&
+          current.repo === repo &&
+          current.hash === hash &&
+          current.file === file.path
+        ) {
+          set({ diff });
         }
       } catch (e) {
         set({ notice: { level: 'error', text: String(e) } });
