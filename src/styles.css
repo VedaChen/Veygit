@@ -93,7 +93,7 @@ i.codicon {
 }
 
 .icon-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hover-overlay);
 }
 
 .icon-btn.small {
@@ -127,7 +127,7 @@ i.codicon {
 
 .sidebar-title {
   font-size: 11px;
-  color: #bbbbbb;
+  color: var(--fg-dim);
   letter-spacing: 0.2px;
 }
 
@@ -169,7 +169,7 @@ i.codicon {
 
 .sash:hover,
 .sash:active {
-  background: #007acc;
+  background: var(--accent);
 }
 
 /* ---------- 区块 ---------- */
@@ -213,7 +213,7 @@ i.codicon {
 .section-count {
   margin-left: 6px;
   background: var(--badge-bg);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   border-radius: 10px;
   padding: 0 6px;
   font-size: 10px;
@@ -258,7 +258,7 @@ i.codicon {
 }
 
 .repo-item.active .repo-icon {
-  color: #ffffff;
+  color: var(--fg);
 }
 
 .repo-name {
@@ -296,7 +296,7 @@ i.codicon {
 }
 
 .repo-branch:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--hover-strong);
   color: var(--fg);
 }
 
@@ -319,7 +319,7 @@ i.codicon {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--scrim);
 }
 
 .picker {
@@ -332,7 +332,7 @@ i.codicon {
   background: var(--bg-menu);
   border: 1px solid var(--border-menu);
   border-radius: 6px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
@@ -361,7 +361,7 @@ i.codicon {
 }
 
 .picker-input::placeholder {
-  color: #8a8a8a;
+  color: var(--fg-dim);
 }
 
 .picker-list {
@@ -530,7 +530,7 @@ i.codicon {
   background: var(--bg-menu);
   border: 1px solid var(--border-menu);
   border-radius: 6px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
 }
 
 .menu-item {
@@ -596,7 +596,7 @@ i.codicon {
 }
 
 .commit-input::placeholder {
-  color: #8a8a8a;
+  color: var(--fg-dim);
 }
 
 /* split 提交按钮：主按钮 + 下拉箭头。
@@ -617,7 +617,7 @@ i.codicon {
   border: none;
   border-radius: 4px 0 0 4px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   font-size: 12.5px;
   cursor: pointer;
 }
@@ -633,10 +633,10 @@ i.codicon {
   align-items: center;
   justify-content: center;
   border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  border-left: 1px solid var(--divider-on-accent);
   border-radius: 0 4px 4px 0;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   cursor: pointer;
 }
 
@@ -666,7 +666,7 @@ i.codicon {
   gap: 6px;
   height: 28px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   border-radius: 4px;
   font-size: 13px;
 }
@@ -716,7 +716,7 @@ i.codicon {
 .group-count {
   margin-left: 6px;
   background: var(--badge-bg);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   border-radius: 10px;
   padding: 0 6px;
   font-size: 10px;
@@ -767,7 +767,7 @@ i.codicon {
 }
 
 .dir-row .tree-icon {
-  color: #c09553;
+  color: var(--folder-icon);
 }
 
 .tree-name {
@@ -887,7 +887,7 @@ i.codicon {
 .ref-badge {
   flex-shrink: 0;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   border-radius: 4px;
   padding: 0 5px;
   font-size: 10px;
@@ -895,7 +895,7 @@ i.codicon {
 }
 
 .ref-badge.remote {
-  background: #4d4d4d;
+  background: var(--badge-bg);
 }
 
 .graph-line2 {
@@ -933,7 +933,7 @@ i.codicon {
   align-items: stretch;
   flex-shrink: 0;
   height: 35px;
-  background: var(--bg-sidebar); /* 标签区背景（VS Code 标签区 #252526） */
+  background: var(--bg-sidebar); /* 标签区背景（对照 VS Code 标签区，随主题变化） */
   overflow: hidden;
 }
 
@@ -944,7 +944,7 @@ i.codicon {
   padding: 0 10px;
   min-width: 0;
   max-width: 280px;
-  background: #2d2d2d; /* 非活动标签背景（无对应变量，用近似值） */
+  background: var(--tab-inactive-bg); /* 非活动标签背景 */
   color: var(--fg-dim); /* 非活动文字（偏灰） */
   font-size: 12px;
   border-right: 1px solid var(--bg-editor);
@@ -985,7 +985,7 @@ i.codicon {
 }
 
 .tab-close:hover {
-  background: rgba(255, 255, 255, 0.12); /* 与现有 hover 叠加色一致（无对应变量） */
+  background: var(--hover-strong); /* 与 .repo-branch:hover 同系叠加色 */
 }
 
 .tab-close .codicon {
@@ -1042,7 +1042,7 @@ i.codicon {
   gap: 12px;
   height: 24px;
   padding: 0 10px;
-  background: #181818;
+  background: var(--bg-deep);
   color: var(--fg);
   font-size: 12px;
   flex-shrink: 0;
@@ -1091,11 +1091,11 @@ i.codicon {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(121, 121, 121, 0.4);
+  background: var(--scrollbar);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.7);
+  background: var(--scrollbar-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -1118,7 +1118,7 @@ i.codicon {
   background: var(--bg-menu);
   border: 1px solid var(--border-menu);
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-lg);
 }
 
 .flyout-item {
@@ -1139,7 +1139,7 @@ i.codicon {
 }
 
 .flyout-item.disabled {
-  color: #6e6e6e;
+  color: var(--fg-disabled);
   cursor: default;
 }
 
@@ -1175,7 +1175,7 @@ i.codicon {
   background: var(--bg-menu);
   border: 1px solid var(--border-menu);
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-lg);
 }
 
 .flyout-item:hover > .flyout-sub {
@@ -1211,7 +1211,7 @@ i.codicon {
   font-size: 11.5px;
   line-height: 1.4;
   white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-sm);
   z-index: 999;
   pointer-events: none;
 }
@@ -1245,7 +1245,7 @@ i.codicon {
 }
 
 .graph-select-btn:hover {
-  background: rgba(255, 255, 255, 0.1); /* 与 .icon-btn:hover 一致 */
+  background: var(--hover-overlay); /* 与 .icon-btn:hover 一致 */
 }
 
 .graph-select-btn span {
@@ -1277,7 +1277,7 @@ i.codicon {
   padding: 4px 8px;
   font-size: 12px;
   color: var(--fg);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-subtle);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -1285,7 +1285,7 @@ i.codicon {
 
 /* 提交展开的文件列表 */
 .graph-files {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-subtle-2);
   border-top: 1px solid var(--border);
 }
 
@@ -1341,7 +1341,7 @@ i.codicon {
   padding: 0 12px;
   border-radius: 4px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--fg-on-accent);
   font-size: 12px;
   flex-shrink: 0;
 }
@@ -1379,4 +1379,83 @@ i.codicon {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ---------- 设置面板 ---------- */
+
+/* 设置面板遮罩层（对齐 QuickPick 的遮罩语义，随主题切换深浅） */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 960;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim);
+}
+
+/* 设置面板主体（居中弹窗，宽度固定、窄屏自适应） */
+.settings-panel {
+  width: 420px;
+  max-width: calc(100vw - 80px);
+  background: var(--bg-menu);
+  border: 1px solid var(--border-menu);
+  border-radius: 8px;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+/* 面板标题栏（左标题右关闭按钮） */
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 面板内容区（各设置项纵向排列） */
+.settings-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 设置项标签 */
+.settings-item-label {
+  font-size: 12.5px;
+  color: var(--fg);
+  margin-bottom: 8px;
+}
+
+/* 单选按钮组（如主题：深色 / 浅色） */
+.settings-choice {
+  display: flex;
+  gap: 6px;
+}
+
+/* 单选按钮（未选中态透明底，选中态见 .active） */
+.settings-choice-btn {
+  flex: 1;
+  height: 26px;
+  border: 1px solid var(--border-menu);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.settings-choice-btn:hover {
+  background: var(--hover-overlay);
+}
+
+.settings-choice-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--fg-on-accent);
 }

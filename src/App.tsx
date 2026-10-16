@@ -1,12 +1,16 @@
 import { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { useStore } from './store';
+import { monaco } from './monaco-setup';
 import { Sidebar } from './components/Sidebar';
 import { DiffViewer } from './components/DiffViewer';
 import { StatusBar } from './components/StatusBar';
 import { BranchPicker } from './components/BranchPicker';
+import { SettingsPanel } from './components/SettingsPanel';
 
 export default function App() {
+  const appearance = useStore((s) => s.appearance);
+
   useEffect(() => {
     void useStore.getState().init();
 
@@ -18,6 +22,19 @@ export default function App() {
       void unlisten.then((fn) => fn());
     };
   }, []);
+
+  // 应用主题（含"自动"模式跟随系统实时变化）
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = (): void => {
+      const mode = appearance === 'auto' ? (media.matches ? 'dark' : 'light') : appearance;
+      document.documentElement.dataset.theme = mode;
+      monaco.editor.setTheme(mode === 'light' ? 'git-panel-light' : 'git-panel-dark');
+    };
+    apply();
+    media.addEventListener('change', apply);
+    return () => media.removeEventListener('change', apply);
+  }, [appearance]);
 
   return (
     <div className="app">
@@ -51,6 +68,7 @@ export default function App() {
       </div>
       <StatusBar />
       <BranchPicker />
+      <SettingsPanel />
     </div>
   );
 }

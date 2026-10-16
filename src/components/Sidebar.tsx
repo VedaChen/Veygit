@@ -5,10 +5,8 @@ import { GraphSection } from './GraphSection';
 
 export function Sidebar() {
   const activeRoot = useStore((s) => s.activeRoot);
-  const refreshAll = useStore((s) => s.refreshAll);
-  const openRepository = useStore((s) => s.openRepository);
-  const busy = useStore((s) => s.busy);
   const sidebarWidth = useStore((s) => s.sidebarWidth);
+  const setSettingsOpen = useStore((s) => s.setSettingsOpen);
 
   return (
     <aside className="sidebar" style={{ width: sidebarWidth }}>
@@ -20,19 +18,10 @@ export function Sidebar() {
         <div className="sidebar-header-actions">
           <button
             className="icon-btn small"
-            title="全部刷新"
-            onClick={() => void refreshAll()}
-            disabled={busy}
+            title="设置"
+            onClick={() => setSettingsOpen(true)}
           >
-            <i className={`codicon codicon-refresh${busy ? ' spinning' : ''}`} />
-          </button>
-          <button
-            className="icon-btn small"
-            title="打开存储库"
-            onClick={() => void openRepository()}
-            disabled={busy}
-          >
-            <i className="codicon codicon-add" />
+            <i className="codicon codicon-settings-gear" />
           </button>
         </div>
       </div>

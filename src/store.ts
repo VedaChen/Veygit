@@ -62,6 +62,12 @@ interface AppStore {
   /** 侧栏宽度（像素） */
   sidebarWidth: number;
   setSidebarWidth: (width: number) => void;
+  /** 外观模式：自动（跟随系统）/ 浅色 / 暗色 */
+  appearance: AppearanceMode;
+  setAppearance: (mode: AppearanceMode) => void;
+  /** 设置面板是否打开 */
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
   branchPicker: BranchPickerState | null;
 
   init: () => Promise<void>;
@@ -132,6 +138,20 @@ function loadViewMode(): ScmViewMode {
     return localStorage.getItem(VIEW_MODE_KEY) === 'tree' ? 'tree' : 'list';
   } catch {
     return 'list';
+  }
+}
+
+/** 外观模式（对照 VS Code window.autoDetectColorScheme / workbench.colorTheme 简化版） */
+export type AppearanceMode = 'auto' | 'light' | 'dark';
+
+const APPEARANCE_KEY = 'vscode-git-panel.appearance';
+
+function loadAppearance(): AppearanceMode {
+  try {
+    const raw = localStorage.getItem(APPEARANCE_KEY);
+    return raw === 'light' || raw === 'dark' ? raw : 'auto';
+  } catch {
+    return 'auto';
   }
 }
 
@@ -320,6 +340,17 @@ export const useStore = create<AppStore>()((set, get) => {
         // ignore
       }
     },
+    appearance: loadAppearance(),
+    setAppearance: (mode) => {
+      set({ appearance: mode });
+      try {
+        localStorage.setItem(APPEARANCE_KEY, mode);
+      } catch {
+        // ignore
+      }
+    },
+    settingsOpen: false,
+    setSettingsOpen: (open) => set({ settingsOpen: open }),
     branchPicker: null,
 
     // ---- 图表（对照 VS Code SCM Graph） ----

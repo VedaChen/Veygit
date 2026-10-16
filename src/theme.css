@@ -1,5 +1,7 @@
-/* VS Code Dark+ 主题变量（对照 VS Code 默认深色主题的 token 值） */
-:root {
+/* VS Code Dark+（默认）与 Light+ 主题变量（对照 VS Code 默认主题 token 值） */
+:root,
+:root[data-theme='dark'] {
+  /* ===== 现有变量（保持原值） ===== */
   --bg-editor: #1e1e1e;
   --bg-sidebar: #252526;
   --bg-activity: #333333;
@@ -27,4 +29,77 @@
   --git-untracked: #73c991;
   --git-conflict: #e4676b;
   --git-renamed: #73c991;
+
+  /* ===== 新增语义变量（深色值） ===== */
+  --hover-overlay: rgba(255, 255, 255, 0.1);      /* 图标按钮等 hover 叠加 */
+  --hover-strong: rgba(255, 255, 255, 0.12);      /* 较强 hover（徽章关闭等） */
+  --bg-subtle: rgba(255, 255, 255, 0.03);         /* 微弱区块背景 */
+  --bg-subtle-2: rgba(255, 255, 255, 0.02);       /* 更弱区块背景 */
+  --scrim: rgba(0, 0, 0, 0.3);                    /* 遮罩（如弹层背景） */
+
+  --shadow-xl: 0 8px 30px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.5);
+
+  --fg-on-accent: #ffffff;                        /* 强调色按钮上的文字 */
+  --divider-on-accent: rgba(255, 255, 255, 0.35); /* 强调色按钮内的分隔线 */
+  --folder-icon: #c09553;                         /* 目录图标色 */
+  --tab-inactive-bg: #2d2d2d;                     /* 非活动标签背景 */
+  --fg-disabled: #6e6e6e;                         /* 禁用项文字 */
+  --scrollbar: rgba(121, 121, 121, 0.4);
+  --scrollbar-hover: rgba(100, 100, 100, 0.7);
+  --bg-deep: #181818;                             /* 比编辑器更深的背景（弹层输入区等） */
+}
+
+:root[data-theme='light'] {
+  /* ===== VS Code Light+ 对应值 ===== */
+  --bg-editor: #ffffff;
+  --bg-sidebar: #f3f3f3;
+  --bg-activity: #2c2c2c;
+  --bg-input: #ffffff;
+  --bg-hover: #e8e8e8;
+  --bg-menu: #ffffff;
+  --bg-selected: #cce5ff;
+
+  --fg: #3b3b3b;
+  --fg-dim: #767676;
+  --fg-error: #e51400;
+
+  --border: #e5e5e5;
+  --border-menu: #c8c8c8;
+
+  --accent: #005fb8;
+  --accent-hover: #0258a8;
+  --focus: #005fb8;
+  --badge-bg: #c4c4c4;
+
+  /* git 文件状态配色（gitDecoration.*） */
+  --git-modified: #895503;
+  --git-added: #007100;
+  --git-deleted: #ad0707;
+  --git-untracked: #007100;
+  --git-conflict: #ad0707;
+  --git-renamed: #007100;
+
+  /* ===== 新增语义变量（浅色值） ===== */
+  --hover-overlay: rgba(0, 0, 0, 0.06);
+  --hover-strong: rgba(0, 0, 0, 0.09);
+  --bg-subtle: rgba(0, 0, 0, 0.025);
+  --bg-subtle-2: rgba(0, 0, 0, 0.015);
+  --scrim: rgba(0, 0, 0, 0.2);
+
+  --shadow-xl: 0 8px 30px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.14);
+  --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.14);
+
+  --fg-on-accent: #ffffff;
+  --divider-on-accent: rgba(255, 255, 255, 0.35);
+  --folder-icon: #c09553;
+  --tab-inactive-bg: #ececec;
+  --fg-disabled: #a0a0a0;
+  --scrollbar: rgba(100, 100, 100, 0.4);
+  --scrollbar-hover: rgba(80, 80, 80, 0.6);
+  --bg-deep: #f8f8f8;
 }

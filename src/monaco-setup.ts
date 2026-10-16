@@ -20,6 +20,22 @@ monaco.editor.defineTheme('git-panel-dark', {
   },
 });
 
+monaco.editor.defineTheme('git-panel-light', {
+  base: 'vs',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#ffffff',
+    'editorGutter.background': '#ffffff',
+    'diffEditor.insertedTextBackground': '#9bb95533',
+    'diffEditor.removedTextBackground': '#ff000033',
+    'diffEditor.insertedLineBackground': '#9bb95530',
+    'diffEditor.removedLineBackground': '#ff000030',
+    'scrollbarSlider.background': '#64646466',
+    'scrollbarSlider.hoverBackground': '#646464b3',
+  },
+});
+
 const extensionLanguages: Record<string, string> = {
   ts: 'typescript',
   tsx: 'typescript',

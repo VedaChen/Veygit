@@ -4,6 +4,11 @@ import { useStore } from '../store';
 import type { DiffContent } from '../types';
 import { splitPath } from '../util';
 
+/** 编辑器创建时读取当前生效的主题（后续运行时切换由 App 的全局 setTheme 处理） */
+function currentMonacoTheme(): string {
+  return document.documentElement.dataset.theme === 'light' ? 'git-panel-light' : 'git-panel-dark';
+}
+
 export function DiffViewer() {
   const repo = useStore((s) => s.repos.find((r) => r.info.root === s.activeRoot));
   const selection = useStore((s) => s.selection);
@@ -94,7 +99,7 @@ function DiffView({
       return;
     }
     const editor = monaco.editor.createDiffEditor(el, {
-      theme: 'git-panel-dark',
+      theme: currentMonacoTheme(),
       readOnly: true,
       originalEditable: false,
       automaticLayout: true,
@@ -175,7 +180,7 @@ function PatchView({
       return;
     }
     const editor = monaco.editor.create(el, {
-      theme: 'git-panel-dark',
+      theme: currentMonacoTheme(),
       readOnly: true,
       automaticLayout: true,
       minimap: { enabled: false },
