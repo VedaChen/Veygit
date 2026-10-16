@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 
 use super::exec::Git;
-use super::types::{CommitFile, CommitInfo};
+use super::types::{CommitFile, CommitInfo, CommitStats};
 
 /// 读取提交历史。
 /// 字段分隔用 0x1f（unit separator），条目分隔用 -z 的 \0。
@@ -115,4 +115,49 @@ pub fn get_commit_files(git: &Git, hash: &str) -> Result<Vec<CommitFile>> {
     }
 
     Ok(files)
+}
+
+/// 从 shortstat 行的某个逗号分段（如 "1172 insertions(+)"）提取开头数字；
+/// 找不到该分段或解析失败时按 0 处理（兼容 "1,172" 千分位写法）。
+fn shortstat_number(line: &str, keyword: &str) -> u32 {
+    for part in line.split(',') {
+        let part = part.trim();
+        if !part.contains(keyword) {
+            continue;
+        }
+        let digits: String = part
+            .chars()
+            .take_while(|c| c.is_ascii_digit() || *c == ',')
+            .filter(|c| *c != ',')
+            .collect();
+        return digits.parse().unwrap_or(0);
+    }
+    0
+}
+
+/// 读取某个提交的变更统计（对照 VS Code 悬浮卡片的 N files changed / +X / -Y）。
+/// git show --shortstat 输出形如 " 35 files changed, 1172 insertions(+), 149 deletions(-)"，
+/// 三项可能只有部分出现（如 "1 file changed, 1 deletion(-)"）；merge / 空提交无输出 → 三项均 0。
+pub fn get_commit_stats(git: &Git, hash: &str) -> Result<CommitStats> {
+    let out = git.run_raw(&["show", "--shortstat", "--format=", hash])?;
+    if out.code != 0 {
+        return Err(anyhow!(out.combined()));
+    }
+
+    let mut stats = CommitStats {
+        files: 0,
+        insertions: 0,
+        deletions: 0,
+    };
+    for line in out.stdout_string().lines() {
+        let line = line.trim();
+        if line.is_empty() || !line.contains("changed") {
+            continue;
+        }
+        stats.files = shortstat_number(line, "file");
+        stats.insertions = shortstat_number(line, "insertion");
+        stats.deletions = shortstat_number(line, "deletion");
+    }
+
+    Ok(stats)
 }

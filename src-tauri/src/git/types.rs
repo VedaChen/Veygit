@@ -82,6 +82,15 @@ pub struct CommitFile {
     pub status: String,
 }
 
+/// 提交的变更统计（对照 VS Code 悬浮卡片）
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitStats {
+    pub files: u32,
+    pub insertions: u32,
+    pub deletions: u32,
+}
+
 /// diff 内容：kind = "text" | "binary" | "tooLarge"
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]

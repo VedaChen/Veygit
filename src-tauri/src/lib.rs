@@ -55,6 +55,7 @@ pub fn run() {
             commands::clone_repository,
             commands::get_log,
             commands::get_commit_files,
+            commands::get_commit_stats,
             commands::get_commit_patch,
             commands::get_commit_file_diff,
         ])

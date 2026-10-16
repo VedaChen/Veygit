@@ -4,6 +4,7 @@ import type {
   BranchInfo,
   CommitFile,
   CommitInfo,
+  CommitStats,
   DiffContent,
   FileChange,
   RepoInfo,
@@ -166,6 +167,10 @@ interface AppStore {
   expandedCommit: string | null;
   /** 提交 hash → 变更文件列表缓存（展开时懒加载） */
   commitFiles: Record<string, CommitFile[]>;
+  /** 提交 hash → 变更统计缓存（悬浮时懒加载） */
+  commitStats: Record<string, CommitStats>;
+  /** 加载提交统计（已有缓存则跳过） */
+  loadCommitStats: (repo: string, hash: string) => Promise<void>;
   /** 展开/收起提交（展开时懒加载文件列表） */
   toggleCommitExpand: (repo: string, hash: string) => Promise<void>;
   /** 打开提交中某文件的 diff 内容（右侧显示） */
@@ -409,8 +414,8 @@ export const useStore = create<AppStore>()((set, get) => {
     // ---- 图表（对照 VS Code SCM Graph） ----
     graphRepo: 'auto',
     setGraphRepo: (value) => {
-      // 切换图表仓库后，提交展开状态与文件缓存失效
-      set({ graphRepo: value, expandedCommit: null, commitFiles: {} });
+      // 切换图表仓库后，提交展开状态、文件列表与变更统计缓存失效
+      set({ graphRepo: value, expandedCommit: null, commitFiles: {}, commitStats: {} });
     },
     graphRefs: 'auto',
     setGraphRefs: (value) => {
@@ -427,6 +432,7 @@ export const useStore = create<AppStore>()((set, get) => {
     },
     expandedCommit: null,
     commitFiles: {},
+    commitStats: {},
 
     async init() {
       if (initialized) {
@@ -588,6 +594,19 @@ export const useStore = create<AppStore>()((set, get) => {
         if (current?.kind === 'commit' && current.hash === hash) {
           set({ patch });
         }
+      } catch (e) {
+        set({ notice: { level: 'error', text: String(e) } });
+      }
+    },
+
+    async loadCommitStats(repo, hash) {
+      // 统计结果缓存：同一提交只请求一次
+      if (get().commitStats[hash]) {
+        return;
+      }
+      try {
+        const stats = await api.getCommitStats(repo, hash);
+        set((state) => ({ commitStats: { ...state.commitStats, [hash]: stats } }));
       } catch (e) {
         set({ notice: { level: 'error', text: String(e) } });
       }

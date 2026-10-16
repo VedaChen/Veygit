@@ -516,6 +516,16 @@ pub async fn get_commit_files(
     with_repo(&state, &repo, |git| log::get_commit_files(git, &hash))
 }
 
+/// 某个提交的变更统计（供提交悬浮卡片显示 files / insertions / deletions）
+#[tauri::command]
+pub async fn get_commit_stats(
+    state: State<'_, AppState>,
+    repo: String,
+    hash: String,
+) -> CmdResult<CommitStats> {
+    with_repo(&state, &repo, |git| log::get_commit_stats(git, &hash))
+}
+
 /// 单个提交的 patch；指定 path 时只看该提交对指定文件的改动
 #[tauri::command]
 pub async fn get_commit_patch(

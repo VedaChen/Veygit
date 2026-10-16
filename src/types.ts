@@ -62,6 +62,13 @@ export interface CommitFile {
   status: string;
 }
 
+/** 提交的变更统计（对照 VS Code 悬浮卡片） */
+export interface CommitStats {
+  files: number;
+  insertions: number;
+  deletions: number;
+}
+
 export type DiffKind = 'text' | 'binary' | 'tooLarge';
 
 export interface DiffContent {

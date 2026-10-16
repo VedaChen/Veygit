@@ -21,6 +21,13 @@ export function formatRelativeTime(unixSeconds: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+/** 绝对时间（悬浮卡片用）：2026年10月16日 15:29 */
+export function formatAbsoluteTime(unixSeconds: number): string {
+  const d = new Date(unixSeconds * 1000);
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function splitPath(path: string): { dir: string; name: string } {
   const idx = path.lastIndexOf('/');
   if (idx < 0) {

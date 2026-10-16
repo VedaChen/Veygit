@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import type { CommitInfo } from '../types';
@@ -6,6 +7,7 @@ import {
   absolutePath,
   computeGraph,
   copyText,
+  formatAbsoluteTime,
   formatRelativeTime,
   GRAPH_LANE_WIDTH,
   GRAPH_ROW_HEIGHT,
@@ -253,17 +255,37 @@ function GraphList({
   const layout = useMemo(() => computeGraph(commits), [commits]);
   // 提交展开后的文件行右键菜单（坐标 + 目标文件路径）
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
+  // 提交行悬浮卡片：延迟 400ms 后显示（坐标已按窗口边界修正）
+  const [hover, setHover] = useState<{ hash: string; x: number; y: number } | null>(null);
+  const hoverTimer = useRef<number | null>(null);
+  // 离开行后的隐藏延迟：允许鼠标跨过行与卡片的间隙移入卡片（例如点击复制哈希）
+  const hideTimer = useRef<number | null>(null);
   const expandedCommit = useStore((s) => s.expandedCommit);
   const commitFiles = useStore((s) => s.commitFiles);
+  const commitStats = useStore((s) => s.commitStats);
   const toggleCommitExpand = useStore((s) => s.toggleCommitExpand);
   const selectCommitFile = useStore((s) => s.selectCommitFile);
 
-  const svgWidth = layout.maxLanes * GRAPH_LANE_WIDTH + 6;
+  // 组件卸载时清理未触发的悬浮/隐藏定时器
+  useEffect(
+    () => () => {
+      if (hoverTimer.current !== null) {
+        window.clearTimeout(hoverTimer.current);
+      }
+      if (hideTimer.current !== null) {
+        window.clearTimeout(hideTimer.current);
+      }
+    },
+    [],
+  );
 
   return (
     <div className="graph-list">
       {commits.map((c, i) => {
         const row = layout.rows[i];
+        // 行宽按该行自身车道数计算：描述自动贴近车道线（对照 VS Code）
+        const rowWidth =
+          Math.max(row.top.length, row.bottom.length, row.lane + 1) * GRAPH_LANE_WIDTH + 6;
         // 展开的提交行高亮（点击行 = 展开/收起文件列表）
         const selected = expandedCommit === c.hash;
 
@@ -272,13 +294,48 @@ function GraphList({
             <div
               className={`graph-row${selected ? ' selected' : ''}`}
               data-hash={c.hash}
-              title={`${c.shortHash}  ${c.author}  ${formatRelativeTime(c.timestamp)}  ${c.subject}`}
               onClick={() => {
                 // 仅展开/收起提交内的文件列表（右侧 diff 只在点击文件时显示）
                 void toggleCommitExpand(repo.info.root, c.hash);
               }}
+              onMouseEnter={(e) => {
+                // 重新进入行时先取消上一次未触发的定时器
+                if (hoverTimer.current !== null) {
+                  window.clearTimeout(hoverTimer.current);
+                }
+                if (hideTimer.current !== null) {
+                  window.clearTimeout(hideTimer.current);
+                  hideTimer.current = null;
+                }
+                const rect = e.currentTarget.getBoundingClientRect();
+                const hash = c.hash;
+                hoverTimer.current = window.setTimeout(() => {
+                  // 边界保护：右侧放不下则贴近窗口右缘，底部放不下则上移
+                  const x =
+                    rect.right + 8 + 380 > window.innerWidth
+                      ? window.innerWidth - 388
+                      : rect.right + 8;
+                  const y = Math.min(rect.top, window.innerHeight - 240);
+                  setHover({ hash, x, y });
+                  void useStore.getState().loadCommitStats(repo.info.root, hash);
+                }, 400);
+              }}
+              onMouseLeave={() => {
+                if (hoverTimer.current !== null) {
+                  window.clearTimeout(hoverTimer.current);
+                  hoverTimer.current = null;
+                }
+                // 延迟隐藏：给鼠标留出移入卡片的时间（卡片 onMouseEnter 会取消）
+                if (hideTimer.current !== null) {
+                  window.clearTimeout(hideTimer.current);
+                }
+                hideTimer.current = window.setTimeout(() => {
+                  hideTimer.current = null;
+                  setHover(null);
+                }, 150);
+              }}
             >
-              <GraphSvg row={row} width={svgWidth} />
+              <GraphSvg row={row} width={rowWidth} />
               <div className="graph-main">
                 <span className="graph-subject">{c.subject}</span>
                 {c.refs.map((r) => {
@@ -299,7 +356,7 @@ function GraphList({
               </div>
             </div>
             {expandedCommit === c.hash && (
-              <div className="graph-files" style={{ paddingLeft: svgWidth + 4 }}>
+              <div className="graph-files" style={{ paddingLeft: rowWidth + 4 }}>
                 {(commitFiles[c.hash] ?? []).map((f) => {
                   const { dir, name } = splitPath(f.path);
                   return (
@@ -349,6 +406,70 @@ function GraphList({
           onClose={() => setCtxMenu(null)}
         />
       )}
+      {/* 提交悬浮卡片：portal 到 body，避免被列表滚动容器裁剪 */}
+      {hover &&
+        (() => {
+          const c = commits.find((x) => x.hash === hover.hash);
+          if (!c) {
+            return null;
+          }
+          const stats = commitStats[c.hash] ?? null;
+          return createPortal(
+            <div
+              className="commit-hover"
+              style={{ left: hover.x, top: hover.y }}
+              onMouseEnter={() => {
+                // 鼠标进入卡片：取消行触发的延迟隐藏
+                if (hideTimer.current !== null) {
+                  window.clearTimeout(hideTimer.current);
+                  hideTimer.current = null;
+                }
+              }}
+              onMouseLeave={() => {
+                if (hideTimer.current !== null) {
+                  window.clearTimeout(hideTimer.current);
+                  hideTimer.current = null;
+                }
+                setHover(null);
+              }}
+            >
+              <div className="commit-hover-head">
+                <span className="commit-hover-author">{c.author}</span>
+                {`, ${formatRelativeTime(c.timestamp)}（${formatAbsoluteTime(c.timestamp)}）`}
+              </div>
+              <div className="commit-hover-subject">{c.subject}</div>
+              <div className="commit-hover-stats">
+                {stats
+                  ? `已更改 ${stats.files} 个文件，${stats.insertions} 行插入(+)，${stats.deletions} 行删除(-)`
+                  : '统计加载中…'}
+              </div>
+              {c.refs.length > 0 && (
+                <div className="commit-hover-refs">
+                  {c.refs.map((r) => {
+                    const label = prettyRef(r);
+                    return (
+                      <span key={r} className={`ref-badge${isRemoteRef(label) ? ' remote' : ''}`}>
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="commit-hover-hash">
+                <i className="codicon codicon-git-commit" />
+                <span>{c.shortHash}</span>
+                <button
+                  className="commit-hover-copy"
+                  title="复制提交哈希"
+                  onClick={() => void copyText(c.shortHash)}
+                >
+                  <i className="codicon codicon-copy" />
+                </button>
+              </div>
+            </div>,
+            document.body,
+          );
+        })()}
     </div>
   );
 }
