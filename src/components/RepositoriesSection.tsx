@@ -95,20 +95,17 @@ function RepoItem({ repo }: { repo: RepoState }) {
             onClick={() => void sync(root, 'sync')}
           >
             <i className="codicon codicon-sync" />
+            {/* 计数格式对照 VS Code syncLabel：`behind↓ ahead↑`（数字在前、两段都显示，含 0） */}
             {(ahead > 0 || behind > 0) && (
               <span className="sync-counts">
-                {ahead > 0 && (
-                  <span className="sync-ahead" title={`${ahead} 个提交待推送`}>
-                    <i className="codicon codicon-arrow-up" />
-                    {ahead}
-                  </span>
-                )}
-                {behind > 0 && (
-                  <span className="sync-behind" title={`${behind} 个提交待拉取`}>
-                    <i className="codicon codicon-arrow-down" />
-                    {behind}
-                  </span>
-                )}
+                <span className="sync-behind" title={`${behind} 个提交待拉取`}>
+                  {behind}
+                  <i className="codicon codicon-arrow-down" />
+                </span>
+                <span className="sync-ahead" title={`${ahead} 个提交待推送`}>
+                  {ahead}
+                  <i className="codicon codicon-arrow-up" />
+                </span>
               </span>
             )}
           </button>

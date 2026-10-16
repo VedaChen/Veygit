@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { runGitAction } from '../actions';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
 import { Menu } from './Menu';
@@ -8,6 +9,7 @@ export function CommitBox({ repo }: { repo: RepoState }) {
   const setMessage = useStore((s) => s.setMessage);
   const setAmend = useStore((s) => s.setAmend);
   const commit = useStore((s) => s.commit);
+  const sync = useStore((s) => s.sync);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -18,6 +20,24 @@ export function CommitBox({ repo }: { repo: RepoState }) {
   const mergeCount = status?.mergeChanges.length ?? 0;
   const hasStaged = stagedCount > 0 || mergeCount > 0;
   const branch = status?.branch;
+  const ahead = status?.ahead ?? 0;
+  const behind = status?.behind ?? 0;
+  const hasUpstream = !!status?.upstream;
+
+  // 同步更改按钮（对照 VS Code actionButton）：单方向「N 个」，双方向「behind↓ ahead↑」
+  const syncCountLabel =
+    behind > 0 && ahead > 0
+      ? ` ${behind}↓ ${ahead}↑`
+      : behind > 0
+        ? ` ${behind} 个`
+        : ` ${ahead} 个`;
+  // 提示文案对照 VS Code syncTooltip 的三种情形
+  const syncTooltip =
+    ahead > 0 && behind > 0
+      ? `在 ${status?.upstream} 之间拉取 ${behind} 个并推送 ${ahead} 个提交`
+      : behind > 0
+        ? `从 ${status?.upstream} 拉取 ${behind} 个提交`
+        : `将 ${ahead} 个提交推送到 ${status?.upstream}`;
 
   const placeholder = branch
     ? `消息 (Ctrl+Enter 在“${branch}”提交)`
@@ -68,15 +88,44 @@ export function CommitBox({ repo }: { repo: RepoState }) {
         }}
       />
       <div className="commit-split">
-        <button
-          className="commit-split-main"
-          disabled={busy || !repo.message.trim() || !hasStaged}
-          title={hasStaged ? '提交 (Ctrl+Enter)' : '没有已暂存的更改'}
-          onClick={submit}
-        >
-          <i className="codicon codicon-check" />
-          <span>提交</span>
-        </button>
+        {/* 主按钮三态（对照 VS Code actionButton 优先级）：
+            有暂存更改 → 提交；无 upstream → 发布分支；领先/落后 → 同步更改；否则 → 提交（禁用） */}
+        {hasStaged ? (
+          <button
+            className="commit-split-main"
+            disabled={busy || !repo.message.trim()}
+            title="提交 (Ctrl+Enter)"
+            onClick={submit}
+          >
+            <i className="codicon codicon-check" />
+            <span>提交</span>
+          </button>
+        ) : !hasUpstream ? (
+          <button
+            className="commit-split-main"
+            disabled={busy}
+            title="将当前分支发布到远程"
+            onClick={() => void runGitAction('publishBranch', root)}
+          >
+            <i className="codicon codicon-cloud-upload" />
+            <span>发布分支</span>
+          </button>
+        ) : ahead > 0 || behind > 0 ? (
+          <button
+            className="commit-split-main"
+            disabled={busy}
+            title={syncTooltip}
+            onClick={() => void sync(root, 'sync')}
+          >
+            <i className="codicon codicon-sync" />
+            <span>同步更改{syncCountLabel}</span>
+          </button>
+        ) : (
+          <button className="commit-split-main" disabled title="没有已暂存的更改" onClick={submit}>
+            <i className="codicon codicon-check" />
+            <span>提交</span>
+          </button>
+        )}
         <button
           className="commit-split-arrow"
           disabled={busy || !repo.message.trim() || !hasStaged}
