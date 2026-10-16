@@ -52,6 +52,9 @@ interface AppStore {
   busy: boolean;
   notice: Notice | null;
   collapsed: Record<string, boolean>;
+  /** SCM 文件列表视图模式（列表 / 树） */
+  viewMode: ScmViewMode;
+  setViewMode: (mode: ScmViewMode) => void;
   branchPicker: BranchPickerState | null;
 
   init: () => Promise<void>;
@@ -89,6 +92,19 @@ interface AppStore {
   sync: (root: string, op: 'fetch' | 'pull' | 'push' | 'sync') => Promise<void>;
   loadHistory: (root: string) => Promise<void>;
   clearNotice: () => void;
+}
+
+/** SCM 文件视图模式：列表 / 树（对照 VS Code scm.defaultViewMode） */
+export type ScmViewMode = 'list' | 'tree';
+
+const VIEW_MODE_KEY = 'vscode-git-panel.scmViewMode';
+
+function loadViewMode(): ScmViewMode {
+  try {
+    return localStorage.getItem(VIEW_MODE_KEY) === 'tree' ? 'tree' : 'list';
+  } catch {
+    return 'list';
+  }
 }
 
 const STORAGE_KEY = 'vscode-git-panel.repos';
@@ -215,6 +231,15 @@ export const useStore = create<AppStore>()((set, get) => {
     busy: false,
     notice: null,
     collapsed: {},
+    viewMode: loadViewMode(),
+    setViewMode: (mode) => {
+      set({ viewMode: mode });
+      try {
+        localStorage.setItem(VIEW_MODE_KEY, mode);
+      } catch {
+        // ignore
+      }
+    },
     branchPicker: null,
 
     async init() {

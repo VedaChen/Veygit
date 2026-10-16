@@ -12,7 +12,10 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <span className="sidebar-title">源代码管理</span>
+        <div className="sidebar-header-title">
+          <img className="sidebar-logo" src="/logo.png" alt="Git Panel" />
+          <span className="sidebar-title">源代码管理</span>
+        </div>
         <div className="sidebar-header-actions">
           <button
             className="icon-btn small"

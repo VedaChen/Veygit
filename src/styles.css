@@ -122,6 +122,21 @@ i.codicon {
   letter-spacing: 0.2px;
 }
 
+/* 应用 logo（侧栏标题左侧） */
+.sidebar-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sidebar-logo {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex: none;
+}
+
 .sidebar-header-actions {
   display: flex;
   gap: 2px;
@@ -648,7 +663,8 @@ i.codicon {
   height: 24px;
   padding-right: 6px;
   cursor: pointer;
-  overflow: hidden;
+  /* 不裁剪：子项各自处理截断；data-tooltip 悬浮气泡需要溢出显示 */
+  overflow: visible;
 }
 
 .tree-row:hover {
@@ -687,7 +703,7 @@ i.codicon {
 }
 
 .file-row .tree-name {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -1066,4 +1082,50 @@ i.codicon {
 
 .flyout-item:hover > .flyout-sub {
   display: block;
+}
+
+/* ---------- 更改区域增强（悬浮气泡 / 菜单勾选 / 列表模式灰路径） ---------- */
+
+/* 级联菜单的勾选标记（toggle 菜单项） */
+.flyout-item-check {
+  width: 16px;
+  margin-right: 2px;
+  flex: none;
+  font-size: 13px;
+  color: var(--fg);
+}
+
+/* 自定义悬浮提示气泡（挂在带 data-tooltip 属性的元素上） */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -6px;
+  padding: 4px 10px;
+  background: var(--bg-menu);
+  color: var(--fg);
+  border: 1px solid var(--border-menu);
+  border-radius: 5px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* 列表模式：文件行上的灰色父目录（tree-name 为内容宽度，此处弹性延伸） */
+.file-path {
+  flex: 1;
+  min-width: 0;
+  margin-left: 1px;
+  color: var(--fg-dim);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

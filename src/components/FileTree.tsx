@@ -1,25 +1,51 @@
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
-import { collectChanges, compactDir, statusColorClass, type TreeEntry } from '../util';
+import { collectChanges, compactDir, splitPath, statusColorClass, type TreeEntry } from '../util';
 
-/** 文件变更的目录树（对照 VS Code SCM 的 tree 视图 + 紧凑目录合并） */
+/** 文件变更的目录树 / 列表（对照 VS Code SCM 的 tree / list 视图 + 紧凑目录合并） */
 export function FileTree({
   entries,
   repo,
   groupId,
   depth,
+  mode,
 }: {
   entries: TreeEntry[];
   repo: RepoState;
   groupId: string;
   depth: number;
+  mode: 'list' | 'tree';
 }) {
+  // 列表模式：不渲染目录节点，把树深度优先拍平成文件行
+  if (mode === 'list') {
+    return (
+      <>
+        {flatten(entries).map((e) => (
+          <FileNode
+            key={`f:${e.path}`}
+            entry={e}
+            repo={repo}
+            groupId={groupId}
+            depth={0}
+            showDir
+          />
+        ))}
+      </>
+    );
+  }
   return (
     <>
       {entries.map((e) =>
         e.isDir ? (
-          <DirNode key={`d:${e.path}`} entry={e} repo={repo} groupId={groupId} depth={depth} />
+          <DirNode
+            key={`d:${e.path}`}
+            entry={e}
+            repo={repo}
+            groupId={groupId}
+            depth={depth}
+            mode={mode}
+          />
         ) : (
           <FileNode key={`f:${e.path}`} entry={e} repo={repo} groupId={groupId} depth={depth} />
         ),
@@ -28,16 +54,31 @@ export function FileTree({
   );
 }
 
+/** 深度优先拍平目录树，得到有序的文件条目列表 */
+function flatten(entries: TreeEntry[]): TreeEntry[] {
+  const out: TreeEntry[] = [];
+  for (const e of entries) {
+    if (e.isDir) {
+      out.push(...flatten(e.children));
+    } else {
+      out.push(e);
+    }
+  }
+  return out;
+}
+
 function DirNode({
   entry,
   repo,
   groupId,
   depth,
+  mode,
 }: {
   entry: TreeEntry;
   repo: RepoState;
   groupId: string;
   depth: number;
+  mode: 'list' | 'tree';
 }) {
   const { label, target } = compactDir(entry);
   const key = `tree:${repo.info.root}:${groupId}:${target.path}`;
@@ -103,7 +144,13 @@ function DirNode({
         </span>
       </div>
       {!collapsed && (
-        <FileTree entries={target.children} repo={repo} groupId={groupId} depth={depth + 1} />
+        <FileTree
+          entries={target.children}
+          repo={repo}
+          groupId={groupId}
+          depth={depth + 1}
+          mode={mode}
+        />
       )}
     </>
   );
@@ -114,13 +161,16 @@ function FileNode({
   repo,
   groupId,
   depth,
+  showDir,
 }: {
   entry: TreeEntry;
   repo: RepoState;
   groupId: string;
   depth: number;
+  showDir?: boolean;
 }) {
   const change = entry.change!;
+  const { dir } = splitPath(change.path);
   const selection = useStore((s) => s.selection);
   const selectChange = useStore((s) => s.selectChange);
   const stage = useStore((s) => s.stage);
@@ -137,6 +187,8 @@ function FileNode({
   const isIndex = groupId === 'index';
   const isMerge = groupId === 'merge';
   const isUntracked = groupId === 'untracked';
+  // 仅 working / untracked 组允许放弃更改（index / merge 组不显示）
+  const canDiscard = groupId === 'working' || groupId === 'untracked';
 
   const onDiscard = async (): Promise<void> => {
     const what = isUntracked ? '删除该文件' : '丢弃该文件的更改';
@@ -160,12 +212,34 @@ function FileNode({
       <span className="tree-name" title={entry.name}>
         {entry.name}
       </span>
+      {showDir && dir && <span className="file-path">{dir.replace(/\/$/, '')}</span>}
       <span className="row-actions" onClick={(e) => e.stopPropagation()}>
+        {/* title="" 用于屏蔽行级 title，避免与 data-tooltip 气泡同时出现 */}
+        <button
+          className="icon-btn small"
+          title=""
+          data-tooltip="打开文件"
+          onClick={() => void selectChange(repo.info.root, change)}
+        >
+          <i className="codicon codicon-go-to-file" />
+        </button>
+        {canDiscard && (
+          <button
+            className="icon-btn small"
+            title=""
+            disabled={busy}
+            data-tooltip="放弃更改"
+            onClick={() => void onDiscard()}
+          >
+            <i className="codicon codicon-discard" />
+          </button>
+        )}
         {!isIndex && (
           <button
             className="icon-btn small"
+            title=""
             disabled={busy}
-            title={isMerge ? '标记为已解决（暂存）' : '暂存更改'}
+            data-tooltip={isMerge ? '标记为已解决' : '暂存更改'}
             onClick={() => void stage(repo.info.root, [change])}
           >
             <i className="codicon codicon-plus" />
@@ -174,21 +248,12 @@ function FileNode({
         {isIndex && (
           <button
             className="icon-btn small"
+            title=""
             disabled={busy}
-            title="取消暂存"
+            data-tooltip="取消暂存"
             onClick={() => void unstage(repo.info.root, [change])}
           >
             <i className="codicon codicon-remove" />
-          </button>
-        )}
-        {!isMerge && (
-          <button
-            className="icon-btn small"
-            disabled={busy}
-            title="丢弃更改"
-            onClick={() => void onDiscard()}
-          >
-            <i className="codicon codicon-discard" />
           </button>
         )}
       </span>

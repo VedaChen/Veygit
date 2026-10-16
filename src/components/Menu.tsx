@@ -5,6 +5,8 @@ export interface MenuEntry {
   label?: string;
   /** 右侧快捷键提示文字，如 'Ctrl+Alt+K' */
   shortcut?: string;
+  /** 已勾选（标签前显示 ✓） */
+  checked?: boolean;
   /** 灰色禁用 */
   disabled?: boolean;
   /** 分割线（忽略其他字段） */
@@ -71,6 +73,7 @@ function MenuEntries({
             key={i}
             onClick={onClick}
           >
+            {e.checked && <i className="codicon codicon-check flyout-item-check" />}
             <span className="flyout-item-label">{e.label}</span>
             {e.shortcut && <span className="flyout-item-shortcut">{e.shortcut}</span>}
             {e.children && (
@@ -86,6 +89,22 @@ function MenuEntries({
       })}
     </>
   );
+}
+
+/** “更改”资源分组菜单数据工厂（对照 VS Code，含列表/树视图切换勾选项） */
+export function buildChangesMenu(opts: {
+  viewMode: 'list' | 'tree';
+  onViewMode: (mode: 'list' | 'tree') => void;
+  onStageAll: () => void;
+  onDiscardAll: () => void;
+}): MenuEntry[] {
+  return [
+    { label: '以列表形式查看', checked: opts.viewMode === 'list', onSelect: () => opts.onViewMode('list') },
+    { label: '以树形式查看', checked: opts.viewMode === 'tree', onSelect: () => opts.onViewMode('tree') },
+    { separator: true },
+    { label: '暂存所有更改', onSelect: opts.onStageAll },
+    { label: '放弃所有更改', onSelect: opts.onDiscardAll },
+  ];
 }
 
 /** 存储库“更多操作”级联菜单数据工厂（对照 VS Code 源代码管理存储库视图） */
