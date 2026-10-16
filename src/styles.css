@@ -923,51 +923,70 @@ i.codicon {
   min-width: 0;
 }
 
-.diff-title {
+/* ---------- 编辑器标签栏（对照 VS Code diff 标签） ---------- */
+
+.tab-bar {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
   flex-shrink: 0;
   height: 35px;
-  padding: 0 12px;
-  background: var(--bg-editor);
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  background: var(--bg-sidebar); /* 标签区背景（VS Code 标签区 #252526） */
   overflow: hidden;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  min-width: 0;
+  max-width: 280px;
+  background: #2d2d2d; /* 非活动标签背景（无对应变量，用近似值） */
+  color: var(--fg-dim); /* 非活动文字（偏灰） */
+  font-size: 12px;
+  border-right: 1px solid var(--bg-editor);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--bg-editor); /* 活动标签 = 编辑器背景色 */
+  color: var(--fg); /* 活动文字 */
+}
+
+.tab .codicon {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.tab-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.diff-title .codicon {
-  color: var(--fg-dim);
-}
-
-.diff-file-name {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.diff-badge {
+.tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  border-radius: 4px;
+  color: inherit;
   flex-shrink: 0;
-  color: var(--fg-dim);
-  font-size: 11px;
-  border: 1px solid var(--border-menu);
-  border-radius: 3px;
-  padding: 0 5px;
-  line-height: 16px;
+  visibility: hidden; /* 只在活动标签显示关闭按钮（VS Code 同款） */
 }
 
-.diff-arrow {
-  flex-shrink: 0;
-  color: var(--fg-dim);
+.tab.active .tab-close {
+  visibility: visible;
 }
 
-.diff-full-path {
-  margin-left: auto;
-  color: var(--fg-dim);
-  font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.tab-close:hover {
+  background: rgba(255, 255, 255, 0.12); /* 与现有 hover 叠加色一致（无对应变量） */
+}
+
+.tab-close .codicon {
+  font-size: 12px;
 }
 
 .diff-editor {

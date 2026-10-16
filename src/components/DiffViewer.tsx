@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { languageFor, monaco } from '../monaco-setup';
 import { useStore, type Selection } from '../store';
-import type { DiffContent, FileChange, RepositoryStatus } from '../types';
+import type { DiffContent } from '../types';
 import { splitPath } from '../util';
 
 export function DiffViewer() {
@@ -33,7 +33,7 @@ export function DiffViewer() {
   if (diff.kind === 'tooLarge') {
     return <EmptyState icon="codicon-warning" text="文件过大，无法预览差异" />;
   }
-  return <DiffView selection={selection} diff={diff} status={repo.status} head={repo.status?.head ?? null} />;
+  return <DiffView selection={selection} diff={diff} />;
 }
 
 function EmptyState({ icon, text }: { icon: string; text: string }) {
@@ -45,40 +45,21 @@ function EmptyState({ icon, text }: { icon: string; text: string }) {
   );
 }
 
-function findChange(status: RepositoryStatus | null, sel: Selection): FileChange | undefined {
-  if (!status || !sel || sel.kind !== 'change') {
-    return undefined;
-  }
-  const all = [
-    ...status.mergeChanges,
-    ...status.indexChanges,
-    ...status.workingTreeChanges,
-    ...status.untrackedChanges,
-  ];
-  return all.find((c) => c.path === sel.path && c.staged === sel.staged);
-}
-
 function DiffView({
   selection,
   diff,
-  status,
-  head,
 }: {
   selection: Extract<Selection, { kind: 'change' }>;
   diff: DiffContent;
-  status: RepositoryStatus | null;
-  head: string | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
 
+  const closeSelection = useStore((s) => s.clearSelection);
   const { name } = splitPath(selection.path);
-  const change = findChange(status, selection);
-  const isUntracked = change?.status === '?';
-  const headShort = head ? head.slice(0, 7) : 'HEAD';
 
-  const leftRef = selection.staged ? headShort : isUntracked ? '空' : '索引';
-  const rightRef = selection.staged ? '索引' : '工作区';
+  // 右侧文档的描述：staged 时是索引，否则是工作树（untracked 同样属于工作树）
+  const rightLabel = selection.staged ? '索引' : '工作树';
 
   useEffect(() => {
     const el = containerRef.current;
@@ -130,13 +111,18 @@ function DiffView({
 
   return (
     <div className="diff-view">
-      <div className="diff-title" title={selection.path}>
-        <i className="codicon codicon-file" />
-        <span className="diff-file-name">{name}</span>
-        <span className="diff-badge">{leftRef}</span>
-        <span className="diff-arrow">↔</span>
-        <span className="diff-badge">{rightRef}</span>
-        <span className="diff-full-path">{selection.path}</span>
+      <div className="tab-bar">
+        <div className="tab" title={selection.path}>
+          <i className="codicon codicon-file" />
+          <span className="tab-name">{name}</span>
+        </div>
+        <div className="tab active" title={selection.path}>
+          <i className="codicon codicon-file" />
+          <span className="tab-name">{`${name} (${rightLabel})`}</span>
+          <button className="tab-close" title="关闭" onClick={() => closeSelection()}>
+            <i className="codicon codicon-close" />
+          </button>
+        </div>
       </div>
       <div className="diff-editor" ref={containerRef} />
     </div>
@@ -146,6 +132,7 @@ function DiffView({
 function PatchView({ title, patch }: { title: string; patch: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const closeSelection = useStore((s) => s.clearSelection);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -188,9 +175,14 @@ function PatchView({ title, patch }: { title: string; patch: string }) {
 
   return (
     <div className="diff-view">
-      <div className="diff-title" title={title}>
-        <i className="codicon codicon-git-commit" />
-        <span className="diff-file-name">提交 {title}</span>
+      <div className="tab-bar">
+        <div className="tab active" title={title}>
+          <i className="codicon codicon-git-commit" />
+          <span className="tab-name">{`提交 ${title}`}</span>
+          <button className="tab-close" title="关闭" onClick={() => closeSelection()}>
+            <i className="codicon codicon-close" />
+          </button>
+        </div>
       </div>
       <div className="diff-editor" ref={containerRef} />
     </div>

@@ -75,6 +75,8 @@ interface AppStore {
 
   selectChange: (repo: string, change: FileChange) => Promise<void>;
   selectCommit: (repo: string, hash: string, subject: string) => Promise<void>;
+  /** 关闭当前 diff 视图（清空选择与内容） */
+  clearSelection: () => void;
 
   stage: (repo: string, changes: FileChange[]) => Promise<void>;
   unstage: (repo: string, changes: FileChange[]) => Promise<void>;
@@ -463,6 +465,10 @@ export const useStore = create<AppStore>()((set, get) => {
       } catch (e) {
         set({ notice: { level: 'error', text: String(e) } });
       }
+    },
+
+    clearSelection: () => {
+      set({ selection: null, diff: null, patch: null });
     },
 
     async stage(repo, changes) {
