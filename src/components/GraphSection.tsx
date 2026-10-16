@@ -136,7 +136,7 @@ export function GraphSection() {
               title="从所有远程存储库中抓取"
               onClick={() => void fetchAllRepos()}
             >
-              <i className="codicon codicon-cloud-download" />
+              <i className="codicon codicon-repo-fetch" />
             </button>
             <button
               className="icon-btn small"
@@ -148,7 +148,7 @@ export function GraphSection() {
                 }
               }}
             >
-              <i className="codicon codicon-arrow-down" />
+              <i className="codicon codicon-repo-pull" />
             </button>
             <button
               className="icon-btn small"
@@ -160,7 +160,7 @@ export function GraphSection() {
                 }
               }}
             >
-              <i className="codicon codicon-arrow-up" />
+              <i className="codicon codicon-repo-push" />
             </button>
             <button
               className="icon-btn small"

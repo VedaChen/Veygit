@@ -79,8 +79,9 @@ i.codicon {
   background: var(--bg-editor);
 }
 
-/* 存储库行的同步按钮（带 ↑ahead / ↓behind 计数 badge，对照 VS Code） */
-.repo-sync-btn {
+/* 存储库行的同步按钮（带 ↑ahead / ↓behind 计数 badge，对照 VS Code）
+   选择器需覆盖 .icon-btn.small 的固定宽度（width: 20px） */
+.icon-btn.small.repo-sync-btn {
   width: auto;
   min-width: 20px;
   padding: 0 3px;
