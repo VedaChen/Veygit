@@ -1267,17 +1267,24 @@ i.codicon {
   color: var(--fg);
   font-size: 12px;
   max-width: 140px;
-  min-width: 0; /* 允许收缩：配合 .section-actions 的 min-width: 0，空间不足时文字出省略号 */
+  min-width: 54px; /* 保底宽度：图标 + 少量文字 + 下拉箭头始终可见（空间不足只省略文字） */
 }
 
 .graph-select-btn:hover {
   background: var(--hover-overlay); /* 与 .icon-btn:hover 一致 */
 }
 
+/* 文字承担收缩（省略号）；图标与箭头固定不压缩 */
 .graph-select-btn span {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.graph-select-btn .codicon {
+  flex-shrink: 0;
 }
 
 .graph-select-btn .codicon-chevron-down {
