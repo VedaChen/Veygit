@@ -45,6 +45,18 @@ pub struct BranchInfo {
     pub is_remote: bool,
     pub is_head: bool,
     pub commit: String,
+    /// 分支尖端提交的第一行消息
+    pub subject: String,
+    /// 提交作者
+    pub author: String,
+    /// 提交时间（unix 秒）
+    pub timestamp: i64,
+    /// 相对 upstream 领先的提交数
+    pub ahead: u32,
+    /// 相对 upstream 落后的提交数
+    pub behind: u32,
+    /// 是否设置了 upstream（决定是否展示领先/落后）
+    pub has_upstream: bool,
 }
 
 #[derive(Serialize, Clone, Debug)]

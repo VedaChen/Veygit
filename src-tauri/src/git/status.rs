@@ -53,10 +53,12 @@ fn parse(data: &[u8], root: &str) -> Result<RepositoryStatus> {
     while i < data.len() {
         match data[i] {
             b'#' => {
-                // header 行以 \n 结束
-                let end = find_byte(data, i, b'\n');
+                // header 行：默认格式以 \n 结尾，-z 模式下以 NUL 结尾（实测 git for Windows 为 NUL）
+                let end_nl = find_byte(data, i, b'\n');
+                let end_nul = find_byte(data, i, 0);
+                let end = end_nl.min(end_nul);
                 let line = String::from_utf8_lossy(&data[i..end]).into_owned();
-                i = end + 1;
+                i = (end + 1).min(data.len());
 
                 if let Some(rest) = line.strip_prefix("# branch.oid ") {
                     let oid = rest.trim();
@@ -131,7 +133,18 @@ fn parse(data: &[u8], root: &str) -> Result<RepositoryStatus> {
                 let end = find_byte(data, i, 0);
                 i = end + 1;
             }
-            _ => break,
+            _ => {
+                // 跳过可能的 \r\n 等空白（Windows 上实测尾部会多出），
+                // 其余无法识别的内容直接停止解析
+                let mut j = i;
+                while j < data.len() && matches!(data[j], b'\r' | b'\n' | b' ') {
+                    j += 1;
+                }
+                if j == i {
+                    break;
+                }
+                i = j;
+            }
         }
     }
 

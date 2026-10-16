@@ -152,6 +152,28 @@ pub fn checkout_branch(git: &Git, name: &str, create: bool) -> Result<String> {
     Ok(out.combined())
 }
 
+/// 基于 base（默认为当前 HEAD）创建并切换到新分支。
+/// 对应 VS Code 的 "Create Branch..."（base 为空）与 "Create Branch From..."（指定 base）。
+pub fn create_branch(git: &Git, name: &str, base: Option<&str>) -> Result<String> {
+    let out = match base {
+        Some(b) if !b.trim().is_empty() => git.run_raw(&["checkout", "-b", name, b.trim()])?,
+        _ => git.run_raw(&["checkout", "-b", name])?,
+    };
+    if out.code != 0 {
+        return Err(anyhow!(out.combined()));
+    }
+    Ok(out.combined())
+}
+
+/// 签出已分离（Detached HEAD）：git checkout --detach <ref>
+pub fn checkout_detached(git: &Git, reference: &str) -> Result<String> {
+    let out = git.run_raw(&["checkout", "--detach", reference.trim()])?;
+    if out.code != 0 {
+        return Err(anyhow!(out.combined()));
+    }
+    Ok(out.combined())
+}
+
 pub fn fetch(git: &Git) -> Result<String> {
     let out = git.run_raw(&["fetch", "--all", "--prune"])?;
     if out.code != 0 {

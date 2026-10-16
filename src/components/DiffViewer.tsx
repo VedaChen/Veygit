@@ -1,26 +1,27 @@
 import { useEffect, useRef } from 'react';
 import { languageFor, monaco } from '../monaco-setup';
-import { useStore } from '../store';
-import type { DiffContent } from '../types';
+import { useStore, type Selection } from '../store';
+import type { DiffContent, FileChange, RepositoryStatus } from '../types';
+import { splitPath } from '../util';
 
 export function DiffViewer() {
-  const repo = useStore((s) => s.repo);
+  const repo = useStore((s) => s.repos.find((r) => r.info.root === s.activeRoot));
   const selection = useStore((s) => s.selection);
   const diff = useStore((s) => s.diff);
   const patch = useStore((s) => s.patch);
 
   if (!repo) {
-    return <EmptyState icon="codicon-folder-opened" text="打开一个 Git 仓库开始" />;
+    return <EmptyState icon="codicon-folder-opened" text="打开存储库以开始使用" />;
   }
-  if (!selection) {
-    return <EmptyState icon="codicon-git-commit" text="选择一处更改以查看差异" />;
+  if (!selection || selection.repo !== repo.info.root) {
+    return <EmptyState icon="codicon-diff" text="选择一处更改以查看差异" />;
   }
 
   if (selection.kind === 'commit') {
     if (patch === null) {
       return <EmptyState icon="codicon-loading spinning" text="加载提交中..." />;
     }
-    return <PatchView patch={patch} />;
+    return <PatchView title={`${selection.subject}`} patch={patch} />;
   }
 
   if (!diff) {
@@ -32,7 +33,7 @@ export function DiffViewer() {
   if (diff.kind === 'tooLarge') {
     return <EmptyState icon="codicon-warning" text="文件过大，无法预览差异" />;
   }
-  return <DiffView path={selection.path} staged={selection.staged} diff={diff} />;
+  return <DiffView selection={selection} diff={diff} status={repo.status} head={repo.status?.head ?? null} />;
 }
 
 function EmptyState({ icon, text }: { icon: string; text: string }) {
@@ -44,17 +45,40 @@ function EmptyState({ icon, text }: { icon: string; text: string }) {
   );
 }
 
+function findChange(status: RepositoryStatus | null, sel: Selection): FileChange | undefined {
+  if (!status || !sel || sel.kind !== 'change') {
+    return undefined;
+  }
+  const all = [
+    ...status.mergeChanges,
+    ...status.indexChanges,
+    ...status.workingTreeChanges,
+    ...status.untrackedChanges,
+  ];
+  return all.find((c) => c.path === sel.path && c.staged === sel.staged);
+}
+
 function DiffView({
-  path,
-  staged,
+  selection,
   diff,
+  status,
+  head,
 }: {
-  path: string;
-  staged: boolean;
+  selection: Extract<Selection, { kind: 'change' }>;
   diff: DiffContent;
+  status: RepositoryStatus | null;
+  head: string | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
+
+  const { name } = splitPath(selection.path);
+  const change = findChange(status, selection);
+  const isUntracked = change?.status === '?';
+  const headShort = head ? head.slice(0, 7) : 'HEAD';
+
+  const leftRef = selection.staged ? headShort : isUntracked ? '空' : '索引';
+  const rightRef = selection.staged ? '索引' : '工作区';
 
   useEffect(() => {
     const el = containerRef.current;
@@ -86,7 +110,7 @@ function DiffView({
     if (!editor) {
       return;
     }
-    const lang = languageFor(path);
+    const lang = languageFor(selection.path);
     const original = monaco.editor.createModel(diff.original, lang);
     const modified = monaco.editor.createModel(diff.modified, lang);
     editor.setModel({ original, modified });
@@ -96,20 +120,24 @@ function DiffView({
       modified.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [diff, path]);
+  }, [diff, selection.path]);
 
   return (
     <div className="diff-view">
-      <div className="diff-title" title={path}>
-        <span>{path}</span>
-        <span className="diff-badge">{staged ? 'Index ↔ HEAD' : 'Working Tree ↔ Index'}</span>
+      <div className="diff-title" title={selection.path}>
+        <i className="codicon codicon-file" />
+        <span className="diff-file-name">{name}</span>
+        <span className="diff-badge">{leftRef}</span>
+        <span className="diff-arrow">↔</span>
+        <span className="diff-badge">{rightRef}</span>
+        <span className="diff-full-path">{selection.path}</span>
       </div>
       <div className="diff-editor" ref={containerRef} />
     </div>
   );
 }
 
-function PatchView({ patch }: { patch: string }) {
+function PatchView({ title, patch }: { title: string; patch: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -149,8 +177,9 @@ function PatchView({ patch }: { patch: string }) {
 
   return (
     <div className="diff-view">
-      <div className="diff-title">
-        <span>提交内容</span>
+      <div className="diff-title" title={title}>
+        <i className="codicon codicon-git-commit" />
+        <span className="diff-file-name">提交 {title}</span>
       </div>
       <div className="diff-editor" ref={containerRef} />
     </div>

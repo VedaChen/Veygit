@@ -10,6 +10,7 @@ pub fn run() {
         .manage(state::AppState::new())
         .invoke_handler(tauri::generate_handler![
             commands::open_repository,
+            commands::close_repository,
             commands::get_status,
             commands::stage,
             commands::unstage,
@@ -18,6 +19,8 @@ pub fn run() {
             commands::get_diff,
             commands::list_branches,
             commands::checkout_branch,
+            commands::create_branch,
+            commands::checkout_detached,
             commands::fetch_all,
             commands::pull,
             commands::push,

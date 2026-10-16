@@ -21,35 +21,51 @@ export const api = {
     return invoke<RepoInfo>('open_repository', { path: dir });
   },
 
-  getStatus: () => invoke<RepositoryStatus>('get_status'),
+  openRepository: (path: string) => invoke<RepoInfo>('open_repository', { path }),
 
-  stage: (paths: string[]) => invoke<void>('stage', { paths }),
+  closeRepository: (repo: string) => invoke<void>('close_repository', { repo }),
 
-  unstage: (paths: string[]) => invoke<void>('unstage', { paths }),
+  getStatus: (repo: string) => invoke<RepositoryStatus>('get_status', { repo }),
 
-  discardChanges: (paths: string[], staged: boolean) =>
-    invoke<void>('discard_changes', { paths, staged }),
+  stage: (repo: string, paths: string[]) => invoke<void>('stage', { repo, paths }),
 
-  commit: (message: string, amend: boolean) =>
-    invoke<string>('commit', { message, amend }),
+  unstage: (repo: string, paths: string[]) =>
+    invoke<void>('unstage', { repo, paths }),
 
-  getDiff: (path: string, staged: boolean, originalPath: string | null) =>
-    invoke<DiffContent>('get_diff', { path, staged, originalPath }),
+  discardChanges: (repo: string, paths: string[], staged: boolean) =>
+    invoke<void>('discard_changes', { repo, paths, staged }),
 
-  listBranches: () => invoke<BranchInfo[]>('list_branches'),
+  commit: (repo: string, message: string, amend: boolean) =>
+    invoke<string>('commit', { repo, message, amend }),
 
-  checkoutBranch: (name: string, create: boolean) =>
-    invoke<string>('checkout_branch', { name, create }),
+  getDiff: (
+    repo: string,
+    path: string,
+    staged: boolean,
+    originalPath: string | null,
+  ) => invoke<DiffContent>('get_diff', { repo, path, staged, originalPath }),
 
-  fetchAll: () => invoke<string>('fetch_all'),
+  listBranches: (repo: string) =>
+    invoke<BranchInfo[]>('list_branches', { repo }),
 
-  pull: () => invoke<string>('pull'),
+  checkoutBranch: (repo: string, name: string, create: boolean) =>
+    invoke<string>('checkout_branch', { repo, name, create }),
 
-  push: () => invoke<string>('push'),
+  createBranch: (repo: string, name: string, base: string | null) =>
+    invoke<string>('create_branch', { repo, name, base }),
 
-  getLog: (limit?: number, skip?: number) =>
-    invoke<CommitInfo[]>('get_log', { limit, skip }),
+  checkoutDetached: (repo: string, reference: string) =>
+    invoke<string>('checkout_detached', { repo, reference }),
 
-  getCommitPatch: (hash: string) =>
-    invoke<string>('get_commit_patch', { hash }),
+  fetchAll: (repo: string) => invoke<string>('fetch_all', { repo }),
+
+  pull: (repo: string) => invoke<string>('pull', { repo }),
+
+  push: (repo: string) => invoke<string>('push', { repo }),
+
+  getLog: (repo: string, limit?: number, skip?: number) =>
+    invoke<CommitInfo[]>('get_log', { repo, limit, skip }),
+
+  getCommitPatch: (repo: string, hash: string) =>
+    invoke<string>('get_commit_patch', { repo, hash }),
 };

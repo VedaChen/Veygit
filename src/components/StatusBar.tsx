@@ -2,9 +2,9 @@ import { useStore } from '../store';
 
 export function StatusBar() {
   const notice = useStore((s) => s.notice);
-  const repo = useStore((s) => s.repo);
-  const status = useStore((s) => s.status);
+  const repo = useStore((s) => s.repos.find((r) => r.info.root === s.activeRoot));
   const clearNotice = useStore((s) => s.clearNotice);
+  const status = repo?.status;
 
   const totalChanges = status
     ? status.mergeChanges.length +
@@ -15,11 +15,7 @@ export function StatusBar() {
 
   return (
     <footer className="statusbar">
-      <div
-        className="status-message"
-        onClick={clearNotice}
-        title={notice?.text ?? ''}
-      >
+      <div className="status-message" onClick={clearNotice} title={notice?.text ?? ''}>
         {notice && (
           <span className={`notice notice-${notice.level}`}>
             <i
@@ -36,13 +32,14 @@ export function StatusBar() {
         )}
       </div>
       <div className="status-spacer" />
+      {repo && <span className="status-item">{repo.info.name}</span>}
       {status?.branch && (
         <span className="status-item">
           <i className="codicon codicon-git-branch" /> {status.branch}
         </span>
       )}
-      {repo && <span className="status-item">{totalChanges} changes</span>}
-      {repo && <span className="status-item">{repo.gitVersion}</span>}
+      {repo && status && <span className="status-item">{totalChanges} 个更改</span>}
+      {repo && <span className="status-item">{repo.info.gitVersion}</span>}
     </footer>
   );
 }
