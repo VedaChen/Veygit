@@ -15,6 +15,7 @@ import {
   type DeviceCode,
 } from './github';
 import { useStore } from './store';
+import { copyText } from './util';
 
 /**
  * Git 菜单动作的统一分发器：菜单里所有功能项（action id）的真正实现。
@@ -275,12 +276,8 @@ async function ensureGitHubAuth(): Promise<{ token: string; login: string } | nu
   // 首次使用需要 OAuth App 的 Client ID（Device Flow 无需 client_secret）
   let clientId = loadGitHubClientId();
   if (!clientId) {
-    const input = await s.promptInput({
-      title: 'GitHub 授权',
-      placeholder: 'OAuth 应用 Client ID',
-      description:
-        '首次使用需配置：GitHub → Settings → Developer settings → OAuth Apps → 新建应用并勾选 Enable Device Flow，然后将 Client ID 粘贴到这里',
-    });
+    // 弹出带完整步骤说明的引导弹窗（可直接打开 GitHub 新建应用页、复制占位 URL）
+    const input = await s.promptGitHubSetup();
     clientId = input?.trim() ?? '';
     if (!clientId) {
       return null;
@@ -320,6 +317,14 @@ async function ensureGitHubAuth(): Promise<{ token: string; login: string } | nu
         placeholder: '验证码',
         value: dc.user_code,
         description: `已在浏览器打开 ${dc.verification_uri}：请输入验证码并授权（授权完成后自动继续，按 Esc 取消）`,
+        option: {
+          label: '复制验证码并打开浏览器',
+          icon: 'codicon-copy',
+          onClick: () => {
+            void copyText(dc.user_code);
+            void openUrl(dc.verification_uri).catch(() => undefined);
+          },
+        },
       })
       .then(() => {
         if (!finished) {

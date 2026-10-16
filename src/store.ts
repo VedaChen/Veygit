@@ -122,6 +122,12 @@ interface AppStore {
   prompt: PromptState | null;
   /** 内部：用户提交/取消 prompt（由 PromptHost 调用） */
   resolvePrompt: (value: string | null) => void;
+  /** GitHub 配置引导弹窗（首次使用 Device Flow 前的 Client ID 配置，由 GitHubSetupDialog 渲染） */
+  promptGitHubSetup: () => Promise<string | null>;
+  /** 内部：GitHub 引导弹窗是否打开 */
+  githubSetupOpen: boolean;
+  /** 内部：用户提交/取消 GitHub 引导弹窗（由 GitHubSetupDialog 调用） */
+  resolveGitHubSetup: (value: string | null) => void;
 
   // ---- GIT 输出面板 ----
   /** GIT 输出面板内容（每次 git 操作追加；最多保留 500 行） */
@@ -262,6 +268,9 @@ let refreshing = false;
 
 /** 当前 prompt 弹窗的 resolve 回调（提交/取消后单次生效） */
 let promptResolver: ((value: string | null) => void) | null = null;
+
+/** GitHub 配置引导弹窗的 resolve 回调（提交 Client ID / 取消后单次生效） */
+let githubSetupResolver: ((value: string | null) => void) | null = null;
 
 /** GIT 输出面板最多保留的行数（超出时截掉最旧的） */
 const OUTPUT_MAX_LINES = 500;
@@ -494,6 +503,7 @@ export const useStore = create<AppStore>()((set, get) => {
     setSettingsOpen: (open) => set({ settingsOpen: open }),
     branchPicker: null,
     prompt: null,
+    githubSetupOpen: false,
     output: [],
     outputOpen: false,
 
@@ -887,6 +897,24 @@ export const useStore = create<AppStore>()((set, get) => {
       const resolve = promptResolver;
       promptResolver = null;
       set({ prompt: null });
+      resolve?.(value);
+    },
+
+    // ---- GitHub 配置引导弹窗 ----
+
+    promptGitHubSetup() {
+      return new Promise<string | null>((resolve) => {
+        // 若上一个引导尚未关闭，先按取消处理，避免其 Promise 永久挂起
+        githubSetupResolver?.(null);
+        githubSetupResolver = resolve;
+        set({ githubSetupOpen: true });
+      });
+    },
+
+    resolveGitHubSetup(value) {
+      const resolve = githubSetupResolver;
+      githubSetupResolver = null;
+      set({ githubSetupOpen: false });
       resolve?.(value);
     },
 

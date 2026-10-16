@@ -395,6 +395,66 @@ i.codicon {
   color: var(--fg-dim);
 }
 
+/* ---------- GitHub 配置引导弹窗 ---------- */
+
+.github-setup {
+  width: 560px;
+}
+
+.github-setup-body {
+  padding: 2px 16px 12px;
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--fg);
+}
+
+.github-setup-intro {
+  margin: 4px 0 6px;
+  color: var(--fg-dim);
+  line-height: 1.6;
+}
+
+.github-setup-steps {
+  margin: 0 0 4px;
+  padding-left: 20px;
+}
+
+.github-setup-steps li {
+  margin-bottom: 2px;
+}
+
+.github-setup-steps code {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-subtle-2);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+}
+
+/* 步骤里的行内操作（打开链接 / 复制占位 URL） */
+.github-setup-link,
+.github-setup-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: #3794ff;
+  font-size: 12px;
+}
+
+.github-setup-link:hover,
+.github-setup-copy:hover {
+  background: var(--bg-hover);
+  text-decoration: underline;
+}
+
+/* 输入行位于弹窗末尾：去掉 .picker-input-row 自带的底部边框 */
+.github-setup .picker-input-row {
+  border-bottom: none;
+}
+
 .picker-input-row {
   display: flex;
   align-items: center;
