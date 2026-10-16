@@ -69,12 +69,14 @@ export function PromptHost(): ReactElement | null {
   return createPortal(
     <div className="picker-overlay" onMouseDown={() => resolvePrompt(null)}>
       <div className="picker" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="picker-title">{prompt.title}</div>
+        {/* 标题为空时（如凭据弹窗）不渲染标题行，只显示输入框与下方提示 */}
+        {prompt.title && <div className="picker-title">{prompt.title}</div>}
         <div className="picker-input-row">
           <i className={`codicon ${prompt.kind === 'pick' ? 'codicon-search' : 'codicon-edit'}`} />
           <input
             ref={inputRef}
             className="picker-input"
+            type={prompt.password ? 'password' : 'text'}
             placeholder={prompt.placeholder}
             value={text}
             spellCheck={false}
@@ -83,6 +85,9 @@ export function PromptHost(): ReactElement | null {
             onKeyDown={onKeyDown}
           />
         </div>
+        {prompt.kind === 'input' && prompt.description && (
+          <div className="picker-description">{prompt.description}</div>
+        )}
         {prompt.kind === 'pick' && (
           <div className="picker-list">
             {filtered.map((it) => (

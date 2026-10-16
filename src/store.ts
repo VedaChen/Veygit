@@ -57,6 +57,10 @@ export interface PromptState {
   placeholder?: string;
   /** input 模式初始值 */
   value?: string;
+  /** input 模式：密码输入（遮蔽显示） */
+  password?: boolean;
+  /** input 模式：输入框下方的提示文字（如 "Git: https://github.com (按 ... 取消)"） */
+  description?: string;
   /** pick 模式选项 */
   items?: PromptPickItem[];
 }
@@ -70,6 +74,8 @@ interface AppStore {
   patch: string | null;
 
   busy: boolean;
+  /** 进行中的网络操作数（fetch/pull/push），用于图表标题栏的进度条 */
+  syncing: number;
   notice: Notice | null;
   collapsed: Record<string, boolean>;
   /** SCM 文件列表视图模式（列表 / 树） */
@@ -95,6 +101,10 @@ interface AppStore {
     title: string;
     placeholder?: string;
     value?: string;
+    /** 密码输入（遮蔽显示） */
+    password?: boolean;
+    /** 输入框下方的提示文字 */
+    description?: string;
   }) => Promise<string | null>;
   /** 单选列表弹窗（返回 null = 用户取消） */
   promptPick: (opts: {
@@ -250,6 +260,75 @@ let promptResolver: ((value: string | null) => void) | null = null;
 /** GIT 输出面板最多保留的行数（超出时截掉最旧的） */
 const OUTPUT_MAX_LINES = 500;
 
+/** 认证失败检测（对齐 VS Code：触发"询问用户名/密码"的典型 git 报错） */
+function isAuthError(text: string): boolean {
+  return /could not read (Username|Password)|Authentication failed|terminal prompts disabled|Invalid username or (token|password)/i.test(
+    text,
+  );
+}
+
+/** 从 http(s) 远程 URL 解析协议 / 主机 / 用户名（ssh 等非 http 协议返回 null，不做凭据弹窗） */
+function parseHttpRemote(url: string): { protocol: string; host: string; username: string } | null {
+  const m = /^(https?):\/\/(?:([^@/]+)@)?([^/:]+)(?::\d+)?\//.exec(url.trim());
+  if (!m) {
+    return null;
+  }
+  return { protocol: m[1], host: m[3], username: m[2] ? decodeURIComponent(m[2]) : '' };
+}
+
+/**
+ * 带认证重试的网络操作（对照 VS Code 的凭据询问）：
+ * 认证失败 → 弹出用户名/密码输入（提示 "Git: https://github.com (按 Enter 确认 / Esc 取消)"）
+ * → 存入 git 凭据管理器 → 重试一次。用户取消或重试仍失败时抛出原错误。
+ */
+async function syncWithAuth(
+  root: string,
+  action: () => Promise<string>,
+  ask: (opts: {
+    title: string;
+    placeholder?: string;
+    password?: boolean;
+    description?: string;
+  }) => Promise<string | null>,
+): Promise<string> {
+  try {
+    return await action();
+  } catch (e) {
+    const errText = String(e);
+    if (!isAuthError(errText)) {
+      throw e;
+    }
+    const url = await api.remoteUrl(root).catch(() => '');
+    const parsed = parseHttpRemote(url);
+    if (!parsed) {
+      throw e;
+    }
+    const hint = `Git: ${parsed.protocol}://${parsed.host} (按 "Enter" 以确认或按 "Esc" 以取消)`;
+    let username = parsed.username;
+    if (!username) {
+      const input = await ask({ title: '', placeholder: 'Username', description: hint });
+      if (input === null) {
+        throw e;
+      }
+      username = input.trim();
+      if (!username) {
+        throw e;
+      }
+    }
+    const password = await ask({
+      title: '',
+      placeholder: 'Password',
+      password: true,
+      description: hint,
+    });
+    if (password === null) {
+      throw e;
+    }
+    await api.storeCredentials(root, parsed.protocol, parsed.host, username, password);
+    return await action();
+  }
+}
+
 function emptyRepoState(info: RepoInfo): RepoState {
   return {
     info,
@@ -365,6 +444,7 @@ export const useStore = create<AppStore>()((set, get) => {
     diff: null,
     patch: null,
     busy: false,
+    syncing: 0,
     notice: null,
     collapsed: {},
     viewMode: loadViewMode(),
@@ -774,6 +854,8 @@ export const useStore = create<AppStore>()((set, get) => {
             title: opts.title,
             placeholder: opts.placeholder,
             value: opts.value,
+            password: opts.password,
+            description: opts.description,
           },
         });
       });
@@ -897,25 +979,32 @@ export const useStore = create<AppStore>()((set, get) => {
     },
 
     async sync(root, op) {
-      await runAction(async () => {
-        let text: string;
-        if (op === 'fetch') {
-          text = await api.fetchAll(root);
-        } else if (op === 'pull') {
-          text = await api.pull(root);
-        } else if (op === 'push') {
-          text = await api.push(root);
-        } else {
-          // 同步 = 先拉后推（对照 VS Code 的 sync）
-          await api.pull(root);
-          text = await api.push(root);
-        }
-        set({
-          notice: { level: 'success', text: text.split('\n')[0] || '完成' },
+      // 网络操作计数：驱动图表标题栏的进度条（UI 侧带延迟隐藏，避免多仓库依次进行时闪烁）
+      set((s) => ({ syncing: s.syncing + 1 }));
+      try {
+        await runAction(async () => {
+          let text: string;
+          const ask = get().promptInput;
+          if (op === 'fetch') {
+            text = await syncWithAuth(root, () => api.fetchAll(root), ask);
+          } else if (op === 'pull') {
+            text = await syncWithAuth(root, () => api.pull(root), ask);
+          } else if (op === 'push') {
+            text = await syncWithAuth(root, () => api.push(root), ask);
+          } else {
+            // 同步 = 先拉后推（对照 VS Code 的 sync）
+            await syncWithAuth(root, () => api.pull(root), ask);
+            text = await syncWithAuth(root, () => api.push(root), ask);
+          }
+          set({
+            notice: { level: 'success', text: text.split('\n')[0] || '完成' },
+          });
         });
-      });
-      await get().refresh(root);
-      await get().loadBranches(root);
+        await get().refresh(root);
+        await get().loadBranches(root);
+      } finally {
+        set((s) => ({ syncing: Math.max(0, s.syncing - 1) }));
+      }
     },
 
     async loadHistory(root) {

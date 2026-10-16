@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { fileIconClass } from '../seti-icons';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
-import type { CommitInfo } from '../types';
+import type { CommitFile, CommitInfo } from '../types';
 import {
   absolutePath,
   computeGraph,
@@ -44,27 +44,14 @@ export function GraphSection() {
 
   // 显示仓库切换后，若该仓库尚未加载历史则补载一次（仅在未加载时触发，避免死循环）
   useEffect(() => {
-    // tree 模式下由下面的 effect 统一加载所有仓库
-    if (graphView === 'tree' || !displayRoot) {
+    if (!displayRoot) {
       return;
     }
     const target = useStore.getState().repos.find((r) => r.info.root === displayRoot);
     if (target && !target.historyLoaded) {
       void loadHistory(displayRoot);
     }
-  }, [displayRoot, graphView, loadHistory]);
-
-  // tree 模式需要所有打开仓库的提交历史
-  useEffect(() => {
-    if (graphView !== 'tree') {
-      return;
-    }
-    for (const r of repos) {
-      if (!r.historyLoaded) {
-        void loadHistory(r.info.root);
-      }
-    }
-  }, [graphView, repos, loadHistory]);
+  }, [displayRoot, loadHistory]);
 
   // 引用选择按钮的文案：自动 / 全部 / 单个引用名 / N 个引用
   const refsLabel =
@@ -87,8 +74,8 @@ export function GraphSection() {
     if (row) {
       row.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-      // 找不到当前提交：列表滚回顶部
-      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // 找不到当前提交：图表列表滚回顶部（内部滚动容器）
+      container.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -188,11 +175,11 @@ export function GraphSection() {
           </>
         }
       />
+      {/* 网络操作（fetch/pull/push）进行中的进度条（对照 VS Code 视图标题栏） */}
+      <GraphProgress />
       {!collapsed && (
-        <div ref={contentRef}>
-          {graphView === 'tree' ? (
-            <GraphTree repos={repos} />
-          ) : repo && repo.commits.length > 0 ? (
+        <div ref={contentRef} className="graph-scroll">
+          {repo && repo.commits.length > 0 ? (
             <GraphList repo={repo} commits={repo.commits} />
           ) : (
             <div className="hint-row">没有提交历史</div>
@@ -226,24 +213,164 @@ export function GraphSection() {
   );
 }
 
-/** tree 模式：所有打开仓库分组展示各自的提交历史 */
-function GraphTree({ repos }: { repos: RepoState[] }) {
-  const visible = repos.filter((r) => r.commits.length > 0);
-  if (visible.length === 0) {
-    return <div className="hint-row">没有提交历史</div>;
+/** 网络操作（fetch/pull/push）进行中的进度条（对照 VS Code 视图标题栏的蓝色滑动横条）。
+    多仓库依次操作时 store 的计数会短暂归零，因此隐藏带 250ms 延迟避免闪烁。 */
+function GraphProgress(): ReactElement | null {
+  const syncing = useStore((s) => s.syncing > 0);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (syncing) {
+      setShow(true);
+      return;
+    }
+    const t = window.setTimeout(() => setShow(false), 250);
+    return () => window.clearTimeout(t);
+  }, [syncing]);
+
+  if (!show) {
+    return null;
   }
   return (
-    <>
-      {visible.map((r) => (
-        <div className="graph-repo-group" key={r.info.root}>
-          <div className="graph-repo-header">
-            <i className="codicon codicon-repo" /> <span>{r.info.name}</span>
-          </div>
-          <GraphList repo={r} commits={r.commits} />
-        </div>
-      ))}
-    </>
+    <div className="view-progress">
+      <div className="view-progress-bit" />
+    </div>
   );
+}
+
+/** 提交文件树的节点（文件夹有 children，文件有 file） */
+interface CommitTreeNode {
+  name: string;
+  /** 完整仓库相对路径（文件夹为目录前缀） */
+  path: string;
+  /** 文件夹的子节点（文件节点无 children） */
+  children?: CommitTreeNode[];
+  /** 文件节点对应的变更 */
+  file?: CommitFile;
+}
+
+/** 把变更文件列表构造成文件树（文件夹在前、同级按名称排序） */
+function buildCommitTree(files: CommitFile[]): CommitTreeNode[] {
+  const root: CommitTreeNode = { name: '', path: '', children: [] };
+  for (const f of files) {
+    const parts = f.path.split('/');
+    let node = root;
+    for (let i = 0; i < parts.length; i++) {
+      const isFile = i === parts.length - 1;
+      const segment = parts[i];
+      const path = parts.slice(0, i + 1).join('/');
+      let child = node.children!.find((x) => x.name === segment);
+      if (!child) {
+        child = { name: segment, path, children: isFile ? undefined : [] };
+        if (isFile) {
+          child.file = f;
+        }
+        node.children!.push(child);
+      }
+      node = child;
+    }
+  }
+  const sortNode = (n: CommitTreeNode): void => {
+    if (!n.children) {
+      return;
+    }
+    n.children.sort((a, b) => {
+      const aDir = !!a.children;
+      const bDir = !!b.children;
+      if (aDir !== bDir) {
+        return aDir ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+    for (const c of n.children) {
+      sortNode(c);
+    }
+  };
+  sortNode(root);
+  return root.children!;
+}
+
+/**
+ * 提交文件树（"以树形式查看"）：文件夹可折叠、文件行只显示文件名（路径由层级表达，
+ * 对照 VS Code tree 模式下变更列表的 hidePath 行为）。
+ */
+function CommitFileTree({
+  files,
+  onSelect,
+  onContextMenu,
+}: {
+  files: CommitFile[];
+  onSelect: (f: CommitFile) => void;
+  onContextMenu: (path: string, x: number, y: number) => void;
+}): ReactElement {
+  const nodes = useMemo(() => buildCommitTree(files), [files]);
+  // 折叠的文件夹路径集合（点击文件夹行切换）
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggle = (path: string): void => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  };
+
+  const renderNodes = (list: CommitTreeNode[], depth: number): ReactElement[] =>
+    list.flatMap((node) => {
+      const indent = { paddingLeft: depth * 14 + 6 };
+      if (node.children) {
+        const isCollapsed = collapsed.has(node.path);
+        return [
+          <div
+            key={node.path}
+            className="graph-dir-row"
+            style={indent}
+            title={node.path}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle(node.path);
+            }}
+          >
+            <i className={`codicon codicon-chevron-${isCollapsed ? 'right' : 'down'}`} />
+            <i className={`codicon codicon-folder${isCollapsed ? '' : '-opened'}`} />
+            <span className="graph-dir-name">{node.name}</span>
+          </div>,
+          ...(isCollapsed ? [] : renderNodes(node.children, depth + 1)),
+        ];
+      }
+      const f = node.file!;
+      return [
+        <div
+          key={node.path}
+          className="graph-file-row"
+          style={indent}
+          title={node.path}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(f);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onContextMenu(f.path, e.clientX, e.clientY);
+          }}
+        >
+          {fileIconClass(f.path) ? (
+            <i className={`file-type-icon ${fileIconClass(f.path)}`} />
+          ) : (
+            <i className="codicon codicon-file" />
+          )}
+          <span className="graph-file-name">{node.name}</span>
+          <span className={`change-status ${statusColorClass(f.status)}`}>{f.status}</span>
+        </div>,
+      ];
+    });
+
+  return <>{renderNodes(nodes, 0)}</>;
 }
 
 function GraphList({
@@ -261,6 +388,7 @@ function GraphList({
   const hoverTimer = useRef<number | null>(null);
   // 离开行后的隐藏延迟：允许鼠标跨过行与卡片的间隙移入卡片（例如点击复制哈希）
   const hideTimer = useRef<number | null>(null);
+  const treeView = useStore((s) => s.graphView === 'tree');
   const expandedCommit = useStore((s) => s.expandedCommit);
   const commitFiles = useStore((s) => s.commitFiles);
   const commitStats = useStore((s) => s.commitStats);
@@ -367,40 +495,49 @@ function GraphList({
                   paddingLeft: 10,
                 }}
               >
-                {(commitFiles[c.hash] ?? []).map((f) => {
-                  const { dir, name } = splitPath(f.path);
-                  return (
-                    <div
-                      key={f.path}
-                      className="graph-file-row"
-                      title={f.path}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void selectCommitFile(repo.info.root, c.hash, c.subject, f);
-                      }}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setCtxMenu({ x: e.clientX, y: e.clientY, path: f.path });
-                      }}
-                    >
-                      {fileIconClass(f.path) ? (
-                        <i className={`file-type-icon ${fileIconClass(f.path)}`} />
-                      ) : (
-                        <i className="codicon codicon-file" />
-                      )}
-                      <span className="graph-file-name">{name}</span>
-                      {/* 仓库名 • 路径（灰色小字，无路径时只显示仓库名） */}
-                      <span className="graph-file-desc">
-                        {repo.info.name}
-                        {dir ? ` • ${dir.replace(/\/$/, '')}` : ''}
-                      </span>
-                      <span className={`change-status ${statusColorClass(f.status)}`}>
-                        {f.status}
-                      </span>
-                    </div>
-                  );
-                })}
+                {treeView ? (
+                  // 树视图：变更文件按文件夹层级展示（对照 VS Code "以树形式查看"）
+                  <CommitFileTree
+                    files={commitFiles[c.hash] ?? []}
+                    onSelect={(f) => void selectCommitFile(repo.info.root, c.hash, c.subject, f)}
+                    onContextMenu={(path, x, y) => setCtxMenu({ x, y, path })}
+                  />
+                ) : (
+                  (commitFiles[c.hash] ?? []).map((f) => {
+                    const { dir, name } = splitPath(f.path);
+                    return (
+                      <div
+                        key={f.path}
+                        className="graph-file-row"
+                        title={f.path}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void selectCommitFile(repo.info.root, c.hash, c.subject, f);
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCtxMenu({ x: e.clientX, y: e.clientY, path: f.path });
+                        }}
+                      >
+                        {fileIconClass(f.path) ? (
+                          <i className={`file-type-icon ${fileIconClass(f.path)}`} />
+                        ) : (
+                          <i className="codicon codicon-file" />
+                        )}
+                        <span className="graph-file-name">{name}</span>
+                        {/* 仓库名 • 路径（灰色小字，无路径时只显示仓库名） */}
+                        <span className="graph-file-desc">
+                          {repo.info.name}
+                          {dir ? ` • ${dir.replace(/\/$/, '')}` : ''}
+                        </span>
+                        <span className={`change-status ${statusColorClass(f.status)}`}>
+                          {f.status}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
           </Fragment>

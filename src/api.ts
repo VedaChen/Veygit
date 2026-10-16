@@ -66,6 +66,16 @@ export const api = {
 
   push: (repo: string) => invoke<string>('push', { repo }),
 
+  remoteUrl: (repo: string) => invoke<string>('remote_url', { repo }),
+
+  storeCredentials: (
+    repo: string,
+    protocol: string,
+    host: string,
+    username: string,
+    password: string,
+  ) => invoke<void>('store_credentials', { repo, protocol, host, username, password }),
+
   getLog: (repo: string, limit?: number, skip?: number, refs?: string[]) =>
     invoke<CommitInfo[]>('get_log', { repo, limit, skip, refs }),
 

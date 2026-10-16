@@ -197,6 +197,27 @@ pub async fn push(state: State<'_, AppState>, repo: String) -> CmdResult<String>
     with_repo(&state, &repo, ops::push)
 }
 
+/// 当前分支对应远程的 URL（认证弹窗解析 host 用）
+#[tauri::command]
+pub async fn remote_url(state: State<'_, AppState>, repo: String) -> CmdResult<String> {
+    with_repo(&state, &repo, ops::remote_url)
+}
+
+/// 存储凭据到 git credential helper（认证弹窗输入后调用，随后重试原操作）
+#[tauri::command]
+pub async fn store_credentials(
+    state: State<'_, AppState>,
+    repo: String,
+    protocol: String,
+    host: String,
+    username: String,
+    password: String,
+) -> CmdResult<()> {
+    with_repo(&state, &repo, |git| {
+        ops::store_credentials(git, &protocol, &host, &username, &password)
+    })
+}
+
 // ---------------------------------------------------------------------------
 // 菜单命令：提交 / 变基 / 拉取推送 / 分支
 // ---------------------------------------------------------------------------

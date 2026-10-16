@@ -51,6 +51,8 @@ impl Git {
             .stdin(Stdio::null())
             .env("GIT_OPTIONAL_LOCKS", "0")
             .env("GIT_TERMINAL_PROMPT", "0")
+            // 禁止 Git Credential Manager 自行弹窗：认证交互统一由应用内弹窗接管
+            .env("GCM_INTERACTIVE", "Never")
             .env("GIT_PAGER", "cat");
         // Windows：GUI（无控制台）父进程 spawn 子进程时默认会弹出黑窗，
         // 加 CREATE_NO_WINDOW 抑制（安装版必须，否则每个 git 命令闪一个终端窗口）
@@ -70,6 +72,30 @@ impl Git {
         let out = cmd
             .output()
             .with_context(|| format!("failed to spawn git: {:?}", self.root))?;
+        Ok(GitOutput {
+            stdout: out.stdout,
+            stderr: out.stderr,
+            code: out.status.code().unwrap_or(-1),
+        })
+    }
+
+    /// 执行 git 命令并向 stdin 写入 input（如 `git credential approve`），不检查退出码
+    pub fn run_input(&self, args: &[&str], input: &str) -> Result<GitOutput> {
+        use std::io::Write;
+
+        let mut cmd = self.command();
+        cmd.args(args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let mut child = cmd
+            .spawn()
+            .with_context(|| format!("failed to spawn git: {:?}", self.root))?;
+        if let Some(mut stdin) = child.stdin.take() {
+            stdin.write_all(input.as_bytes())?;
+            // stdin 在此处 drop，git 读到 EOF
+        }
+        let out = child.wait_with_output()?;
         Ok(GitOutput {
             stdout: out.stdout,
             stderr: out.stderr,

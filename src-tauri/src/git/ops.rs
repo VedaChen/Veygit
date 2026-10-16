@@ -174,6 +174,62 @@ pub fn checkout_detached(git: &Git, reference: &str) -> Result<String> {
     Ok(out.combined())
 }
 
+/// 当前分支对应远程（upstream remote → origin → 第一个 remote）的 URL
+pub fn remote_url(git: &Git) -> Result<String> {
+    let branch = git
+        .run_stdout(&["branch", "--show-current"])
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    let mut remote = if branch.is_empty() {
+        String::new()
+    } else {
+        git.run_raw(&["config", "--get", &format!("branch.{}.remote", branch)])
+            .ok()
+            .filter(|o| o.code == 0)
+            .map(|o| o.stdout_string().trim().to_string())
+            .unwrap_or_default()
+    };
+    if remote.is_empty() || remote == "." {
+        remote = "origin".to_string();
+    }
+    let out = git.run_raw(&["remote", "get-url", &remote])?;
+    if out.code == 0 {
+        return Ok(out.stdout_string().trim().to_string());
+    }
+    // 指定 remote 不存在：回退到第一个 remote
+    let list = git.run_stdout(&["remote"]).unwrap_or_default();
+    let first = list.lines().next().unwrap_or("").trim().to_string();
+    if first.is_empty() {
+        return Err(anyhow!("没有配置远程存储库"));
+    }
+    let out2 = git.run_raw(&["remote", "get-url", &first])?;
+    if out2.code != 0 {
+        return Err(anyhow!(out2.combined()));
+    }
+    Ok(out2.stdout_string().trim().to_string())
+}
+
+/// 把凭据写入 git credential helper（Windows 上通常存入系统凭据管理器）。
+/// 对照 VS Code：认证弹窗输入后，后续 git 操作（本次重试与将来操作）都能直接复用该凭据。
+pub fn store_credentials(
+    git: &Git,
+    protocol: &str,
+    host: &str,
+    username: &str,
+    password: &str,
+) -> Result<()> {
+    let input = format!(
+        "protocol={}\nhost={}\nusername={}\npassword={}\n\n",
+        protocol, host, username, password
+    );
+    let out = git.run_input(&["credential", "approve"], &input)?;
+    if out.code != 0 {
+        return Err(anyhow!(out.combined()));
+    }
+    Ok(())
+}
+
 /// 抓取所有远程：git fetch --all（剪除语义单独走 fetch_prune）
 pub fn fetch(git: &Git) -> Result<String> {
     git.run_msg(&["fetch", "--all"])
