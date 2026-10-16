@@ -1639,6 +1639,34 @@ i.codicon {
   color: var(--fg-on-accent);
 }
 
+/* 设置项描述（灰色小字，如 GitHub 登录状态） */
+.settings-item-desc {
+  font-size: 12px;
+  color: var(--fg-dim);
+  margin-bottom: 8px;
+}
+
+/* 设置项操作按钮行（如 GitHub 退出登录 / 清除配置） */
+.settings-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-action-btn {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--border-menu);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.settings-action-btn:hover {
+  background: var(--hover-overlay);
+}
+
 /* ---------- GIT 输出面板（底部抽屉） ---------- */
 
 /* 面板主体：固定于窗口底部，纵向布局（头部 + 可滚动输出区） */

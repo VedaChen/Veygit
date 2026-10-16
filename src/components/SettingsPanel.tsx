@@ -1,8 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ReactElement } from 'react';
 import { useStore } from '../store';
 import type { AppearanceMode } from '../store';
+import {
+  clearGitHubClientId,
+  clearGitHubToken,
+  loadGitHubClientId,
+  loadGitHubLogin,
+} from '../github';
 
 const MODES: { value: AppearanceMode; label: string }[] = [
   { value: 'auto', label: '自动' },
@@ -16,6 +22,17 @@ export function SettingsPanel(): ReactElement | null {
   const setOpen = useStore((s) => s.setSettingsOpen);
   const appearance = useStore((s) => s.appearance);
   const setAppearance = useStore((s) => s.setAppearance);
+  // GitHub 授权状态（localStorage 读取；清除操作后手动刷新显示）
+  const [ghLogin, setGhLogin] = useState('');
+  const [ghHasClientId, setGhHasClientId] = useState(false);
+
+  // 每次打开设置面板时刷新 GitHub 状态
+  useEffect(() => {
+    if (open) {
+      setGhLogin(loadGitHubLogin());
+      setGhHasClientId(!!loadGitHubClientId());
+    }
+  }, [open]);
 
   // Esc 关闭设置面板（仅在打开时监听）
   useEffect(() => {
@@ -58,6 +75,44 @@ export function SettingsPanel(): ReactElement | null {
                 </button>
               ))}
             </div>
+          </div>
+          <div>
+            <div className="settings-item-label">GitHub 授权</div>
+            <div className="settings-item-desc">
+              {ghLogin
+                ? `已登录：${ghLogin}`
+                : ghHasClientId
+                  ? '已配置 Client ID（未登录）'
+                  : '未配置'}
+            </div>
+            {(ghLogin || ghHasClientId) && (
+              <div className="settings-actions">
+                {ghLogin && (
+                  <button
+                    className="settings-action-btn"
+                    title="清除保存的 GitHub 登录令牌（下次添加 GitHub 远程时需重新授权）"
+                    onClick={() => {
+                      clearGitHubToken();
+                      setGhLogin('');
+                    }}
+                  >
+                    退出登录
+                  </button>
+                )}
+                <button
+                  className="settings-action-btn"
+                  title="清除 Client ID 与登录令牌；下次添加 GitHub 远程时将重新显示配置引导"
+                  onClick={() => {
+                    clearGitHubToken();
+                    clearGitHubClientId();
+                    setGhLogin('');
+                    setGhHasClientId(false);
+                  }}
+                >
+                  清除配置（重新引导）
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
