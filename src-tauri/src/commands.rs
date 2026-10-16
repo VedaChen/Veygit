@@ -356,6 +356,15 @@ pub async fn list_remotes(state: State<'_, AppState>, repo: String) -> CmdResult
     with_repo(&state, &repo, remotes::list_remotes)
 }
 
+/// 列出远程名 + fetch URL（删除远程 QuickPick 的描述用）
+#[tauri::command]
+pub async fn remote_urls(
+    state: State<'_, AppState>,
+    repo: String,
+) -> CmdResult<Vec<(String, String)>> {
+    with_repo(&state, &repo, remotes::remote_urls)
+}
+
 /// 添加远程（git remote add <name> <url>）
 #[tauri::command]
 pub async fn remote_add(

@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 
 export interface MenuEntry {
@@ -48,7 +49,9 @@ export function Menu({ entries, x, y, onClose, onAction }: MenuProps): ReactElem
   );
 }
 
-/** 递归渲染菜单条目；子菜单复用自身，支持任意层级级联 */
+/** 递归渲染菜单条目；子菜单复用自身，支持任意层级级联。
+    子菜单的展开状态由 JS 控制（openIndex）：鼠标移开一级项时保持展开，
+    仅在悬停到其他一级项时才切换（有子菜单则展开其子菜单，否则收起）。 */
 function MenuEntries({
   entries,
   onClose,
@@ -58,6 +61,8 @@ function MenuEntries({
   onClose: () => void;
   onAction?: (action: string) => void;
 }): ReactElement {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   return (
     <>
       {entries.map((e, i) => {
@@ -79,9 +84,19 @@ function MenuEntries({
 
         return (
           <div
-            className={'flyout-item' + (e.disabled ? ' disabled' : '')}
+            className={
+              'flyout-item' +
+              (e.disabled ? ' disabled' : '') +
+              (e.children && openIndex === i ? ' sub-open' : '')
+            }
             key={i}
             onClick={onClick}
+            onMouseEnter={() => {
+              if (e.disabled) {
+                return;
+              }
+              setOpenIndex(e.children ? i : null);
+            }}
           >
             {e.checked && <i className="codicon codicon-check flyout-item-check" />}
             <span className="flyout-item-label">{e.label}</span>

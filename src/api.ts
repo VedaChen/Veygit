@@ -68,6 +68,8 @@ export const api = {
 
   remoteUrl: (repo: string) => invoke<string>('remote_url', { repo }),
 
+  remoteUrls: (repo: string) => invoke<[string, string][]>('remote_urls', { repo }),
+
   storeCredentials: (
     repo: string,
     protocol: string,

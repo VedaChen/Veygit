@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import type { ReactElement } from 'react';
 import { useStore } from '../store';
 
@@ -85,6 +86,18 @@ export function PromptHost(): ReactElement | null {
             onKeyDown={onKeyDown}
           />
         </div>
+        {prompt.kind === 'input' && prompt.option && (
+          <div
+            className="picker-option"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              void openUrl(prompt.option!.url).catch(() => undefined);
+            }}
+          >
+            {prompt.option.icon && <i className={`codicon ${prompt.option.icon}`} />}
+            <span>{prompt.option.label}</span>
+          </div>
+        )}
         {prompt.kind === 'input' && prompt.description && (
           <div className="picker-description">{prompt.description}</div>
         )}
@@ -93,6 +106,7 @@ export function PromptHost(): ReactElement | null {
             {filtered.map((it) => (
               <div className="picker-item" key={it.value} onClick={() => resolvePrompt(it.value)}>
                 <div className="picker-item-line1">
+                  {it.icon && <i className={`codicon ${it.icon}`} />}
                   <span className="picker-item-name">{it.label}</span>
                 </div>
                 {it.description && (

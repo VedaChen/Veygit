@@ -48,6 +48,8 @@ export interface PromptPickItem {
   label: string;
   description?: string;
   value: string;
+  /** 行首图标（codicon 类名，如 'codicon-cloud'） */
+  icon?: string;
 }
 
 /** 当前 prompt 弹窗状态（internal：由 PromptHost 渲染） */
@@ -61,6 +63,8 @@ export interface PromptState {
   password?: boolean;
   /** input 模式：输入框下方的提示文字（如 "Git: https://github.com (按 ... 取消)"） */
   description?: string;
+  /** input 模式：输入框下方的可点击选项（点击打开 url，弹窗保持打开；对照 VS Code "从 GitHub 添加远程存储库"） */
+  option?: { label: string; icon?: string; url: string };
   /** pick 模式选项 */
   items?: PromptPickItem[];
 }
@@ -105,6 +109,8 @@ interface AppStore {
     password?: boolean;
     /** 输入框下方的提示文字 */
     description?: string;
+    /** 输入框下方的可点击选项（点击打开 url） */
+    option?: { label: string; icon?: string; url: string };
   }) => Promise<string | null>;
   /** 单选列表弹窗（返回 null = 用户取消） */
   promptPick: (opts: {
@@ -856,6 +862,7 @@ export const useStore = create<AppStore>()((set, get) => {
             value: opts.value,
             password: opts.password,
             description: opts.description,
+            option: opts.option,
           },
         });
       });

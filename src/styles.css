@@ -374,6 +374,27 @@ i.codicon {
   user-select: text;
 }
 
+/* prompt 弹窗的选项行（如 "从 GitHub 添加远程存储库"）：点击打开链接，弹窗保持打开 */
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 4px 4px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.picker-option:hover {
+  background: var(--bg-selected);
+}
+
+.picker-option .codicon {
+  color: var(--fg-dim);
+}
+
 .picker-input-row {
   display: flex;
   align-items: center;
@@ -877,9 +898,9 @@ i.codicon {
 
 /* ---------- 图表（commit graph） ---------- */
 
-/* 图表滚动容器：提交 log 在此内部滚动（对照 VS Code 图表视图），不带动整个侧栏 */
+/* 图表滚动容器：提交 log 在此内部滚动（对照 VS Code 图表视图），不带动整个侧栏。
+   高度上限由组件按视口剩余空间动态计算（自动撑起） */
 .graph-scroll {
-  max-height: 55vh;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -1245,7 +1266,10 @@ i.codicon {
   box-shadow: var(--shadow-lg);
 }
 
-.flyout-item:hover > .flyout-sub {
+/* 子菜单展开由 JS 控制（.sub-open）：悬停一级项时展开；
+   鼠标移开后保持展开（不再依赖 CSS :hover，避免"移开即关"）、
+   悬停其他一级项时才切换或收起 */
+.flyout-item.sub-open > .flyout-sub {
   display: block;
 }
 

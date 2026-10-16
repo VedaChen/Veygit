@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 import { fileIconClass } from '../seti-icons';
 import { useStore } from '../store';
@@ -41,6 +41,35 @@ export function GraphSection() {
   const [picker, setPicker] = useState<'repo' | 'refs' | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // 列表容器的动态高度上限：按视口剩余空间自动撑起（对照 VS Code 图表视图占满可用高度）
+  const [scrollMax, setScrollMax] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = contentRef.current;
+    if (!el) {
+      return;
+    }
+    const update = (): void => {
+      const rect = el.getBoundingClientRect();
+      // 底部预留：侧栏底栏（32px）+ 少量留白
+      setScrollMax(Math.max(160, Math.round(window.innerHeight - rect.top - 40)));
+    };
+    update();
+    window.addEventListener('resize', update);
+    // 上方区块（存储库/更改）高度变化会推动列表位置，一并监听
+    const ro = new ResizeObserver(update);
+    const scrollParent = el.closest('.sidebar-scroll');
+    if (scrollParent) {
+      for (const child of Array.from(scrollParent.children)) {
+        ro.observe(child);
+      }
+    }
+    return () => {
+      window.removeEventListener('resize', update);
+      ro.disconnect();
+    };
+  }, [collapsed]);
 
   // 显示仓库切换后，若该仓库尚未加载历史则补载一次（仅在未加载时触发，避免死循环）
   useEffect(() => {
@@ -178,7 +207,11 @@ export function GraphSection() {
       {/* 网络操作（fetch/pull/push）进行中的进度条（对照 VS Code 视图标题栏） */}
       <GraphProgress />
       {!collapsed && (
-        <div ref={contentRef} className="graph-scroll">
+        <div
+          ref={contentRef}
+          className="graph-scroll"
+          style={scrollMax === null ? undefined : { maxHeight: scrollMax }}
+        >
           {repo && repo.commits.length > 0 ? (
             <GraphList repo={repo} commits={repo.commits} />
           ) : (

@@ -507,8 +507,21 @@ export async function runGitAction(action: string, repo: string): Promise<void> 
         break;
 
       case 'createBranch':
-        // 打开分支快速选择器后走现有交互流程（默认 create 模式）
-        useStore.getState().openBranchPicker(repo);
+        // 直接询问分支名称并从当前 HEAD 创建并签出（对照 VS Code "Git: 创建分支..."）
+        await run('checkout -b', async () => {
+          const s = useStore.getState();
+          const name = await s.promptInput({
+            title: '',
+            placeholder: '分支名称',
+            description: '请提供新的分支名称 (按 "Enter" 以确认或按 "Esc" 以取消)',
+          });
+          const trimmed = name?.trim();
+          if (!trimmed) {
+            return null;
+          }
+          await s.createBranch(repo, trimmed, null);
+          return null;
+        });
         break;
 
       case 'createBranchFrom':
@@ -635,21 +648,30 @@ export async function runGitAction(action: string, repo: string): Promise<void> 
       case 'remoteAdd':
         await run('remote add', async () => {
           const s = useStore.getState();
-          const name = await s.promptInput({
-            title: '远程名称',
-            placeholder: 'origin',
-            value: 'origin',
-          });
-          const remoteName = name?.trim();
-          if (!remoteName) {
-            return null;
-          }
+          // 第一步：URL（或选择仓库源）——选项点击打开 GitHub 新建仓库页，弹窗保持打开
           const url = await s.promptInput({
-            title: '远程 URL',
-            placeholder: 'https://example.com/repo.git',
+            title: '',
+            placeholder: '提供仓库 URL 或选择仓库源。',
+            description: '添加远程存储库 (按 "Enter" 以确认或按 "Esc" 以取消)',
+            option: {
+              label: '从 GitHub 添加远程存储库',
+              icon: 'codicon-github',
+              url: 'https://github.com/new',
+            },
           });
           const remoteUrl = url?.trim();
           if (!remoteUrl) {
+            return null;
+          }
+          // 第二步：远程名称（默认 origin，对照 VS Code：先 URL 后名称）
+          const name = await s.promptInput({
+            title: '',
+            placeholder: '远程名称',
+            value: 'origin',
+            description: '提供远程存储库的名称 (按 "Enter" 以确认或按 "Esc" 以取消)',
+          });
+          const remoteName = name?.trim();
+          if (!remoteName) {
             return null;
           }
           const out = await api.remoteAdd(repo, remoteName, remoteUrl);
@@ -660,11 +682,22 @@ export async function runGitAction(action: string, repo: string): Promise<void> 
 
       case 'remoteRemove':
         await run('remote remove', async () => {
-          const remotes = await api.listRemotes(repo);
+          const s = useStore.getState();
+          const remotes = await api.remoteUrls(repo);
           if (remotes.length === 0) {
             return showError('没有配置远程仓库');
           }
-          const remote = await pickRemote(remotes, '选择要删除的远程仓库');
+          // 对照 VS Code：QuickPick 列出 "云图标 + 名称 + URL"
+          const remote = await s.promptPick({
+            title: '',
+            placeholder: '选择要删除的远程库',
+            items: remotes.map(([name, url]) => ({
+              label: name,
+              description: url,
+              icon: 'codicon-cloud',
+              value: name,
+            })),
+          });
           if (!remote) {
             return null;
           }

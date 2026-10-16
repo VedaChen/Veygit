@@ -60,6 +60,7 @@ pub fn run() {
             commands::get_commit_file_diff,
             commands::remote_url,
             commands::store_credentials,
+            commands::remote_urls,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
