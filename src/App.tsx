@@ -8,7 +8,7 @@ import { StatusBar } from './components/StatusBar';
 import { BranchPicker } from './components/BranchPicker';
 import { SettingsPanel } from './components/SettingsPanel';
 import { PromptHost } from './components/PromptHost';
-import { GitHubSetupDialog } from './components/GitHubSetupDialog';
+import { GitHubSignInDialog } from './components/GitHubSignInDialog';
 import { OutputPanel } from './components/OutputPanel';
 import { TitleBar } from './components/TitleBar';
 import { registerZoomShortcuts } from './zoom';
@@ -80,7 +80,7 @@ export default function App() {
       <BranchPicker />
       <SettingsPanel />
       <PromptHost />
-      <GitHubSetupDialog />
+      <GitHubSignInDialog />
       <OutputPanel />
     </div>
   );

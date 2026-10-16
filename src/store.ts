@@ -1,5 +1,11 @@
 import { create } from 'zustand';
 import { api } from './api';
+import {
+  clearGitHubToken,
+  fetchGitHubLogin,
+  loadGitHubToken,
+  saveGitHubToken,
+} from './github';
 import type {
   BranchInfo,
   CommitFile,
@@ -10,6 +16,12 @@ import type {
   RepoInfo,
   RepositoryStatus,
 } from './types';
+
+/** GitHub 授权结果（"连接 GitHub"窗口返回） */
+export interface GitHubAuth {
+  token: string;
+  login: string;
+}
 
 /** 单个已打开仓库的状态（对照 VS Code 每个 Repository 实例的模型） */
 export interface RepoState {
@@ -122,12 +134,14 @@ interface AppStore {
   prompt: PromptState | null;
   /** 内部：用户提交/取消 prompt（由 PromptHost 调用） */
   resolvePrompt: (value: string | null) => void;
-  /** GitHub 配置引导弹窗（首次使用 Device Flow 前的 Client ID 配置，由 GitHubSetupDialog 渲染） */
-  promptGitHubSetup: () => Promise<string | null>;
-  /** 内部：GitHub 引导弹窗是否打开 */
-  githubSetupOpen: boolean;
-  /** 内部：用户提交/取消 GitHub 引导弹窗（由 GitHubSetupDialog 调用） */
-  resolveGitHubSetup: (value: string | null) => void;
+  /** "连接 GitHub"窗口（浏览器/设备 + 令牌两个标签；由 GitHubSignInDialog 渲染） */
+  promptGitHubSignIn: () => Promise<GitHubAuth | null>;
+  /** 内部："连接 GitHub"窗口是否打开 */
+  githubSignInOpen: boolean;
+  /** 内部：窗口提交/取消（由 GitHubSignInDialog 调用） */
+  resolveGitHubSignIn: (value: GitHubAuth | null) => void;
+  /** 统一 GitHub 登录：缓存 token 有效直接复用；否则弹出"连接 GitHub"窗口 */
+  signInGitHub: () => Promise<GitHubAuth | null>;
 
   // ---- GIT 输出面板 ----
   /** GIT 输出面板内容（每次 git 操作追加；最多保留 500 行） */
@@ -269,8 +283,8 @@ let refreshing = false;
 /** 当前 prompt 弹窗的 resolve 回调（提交/取消后单次生效） */
 let promptResolver: ((value: string | null) => void) | null = null;
 
-/** GitHub 配置引导弹窗的 resolve 回调（提交 Client ID / 取消后单次生效） */
-let githubSetupResolver: ((value: string | null) => void) | null = null;
+/** "连接 GitHub"窗口的 resolve 回调（登录成功 / 取消后单次生效） */
+let githubSignInResolver: ((value: GitHubAuth | null) => void) | null = null;
 
 /** GIT 输出面板最多保留的行数（超出时截掉最旧的） */
 const OUTPUT_MAX_LINES = 500;
@@ -293,8 +307,9 @@ function parseHttpRemote(url: string): { protocol: string; host: string; usernam
 
 /**
  * 带认证重试的网络操作（对照 VS Code 的凭据询问）：
- * 认证失败 → 弹出用户名/密码输入（提示 "Git: https://github.com (按 Enter 确认 / Esc 取消)"）
- * → 存入 git 凭据管理器 → 重试一次。用户取消或重试仍失败时抛出原错误。
+ * - GitHub 主机：弹出"连接 GitHub"窗口（浏览器/设备 + 令牌），token 存入凭据管理器后重试；
+ * - 其他主机：弹出用户名/密码输入（提示 "Git: https://... (按 Enter 确认 / Esc 取消)"）→ 存储凭据 → 重试一次。
+ * 用户取消或重试仍失败时抛出原错误。
  */
 async function syncWithAuth(
   root: string,
@@ -305,6 +320,7 @@ async function syncWithAuth(
     password?: boolean;
     description?: string;
   }) => Promise<string | null>,
+  signIn: () => Promise<GitHubAuth | null>,
 ): Promise<string> {
   try {
     return await action();
@@ -317,6 +333,15 @@ async function syncWithAuth(
     const parsed = parseHttpRemote(url);
     if (!parsed) {
       throw e;
+    }
+    // GitHub：走"连接 GitHub"窗口，token 直接作为 HTTPS 凭据存储
+    if (parsed.host === 'github.com' || parsed.host.endsWith('.github.com')) {
+      const auth = await signIn();
+      if (!auth) {
+        throw e;
+      }
+      await api.storeCredentials(root, parsed.protocol, parsed.host, auth.login, auth.token);
+      return await action();
     }
     const hint = `Git: ${parsed.protocol}://${parsed.host} (按 "Enter" 以确认或按 "Esc" 以取消)`;
     let username = parsed.username;
@@ -503,7 +528,7 @@ export const useStore = create<AppStore>()((set, get) => {
     setSettingsOpen: (open) => set({ settingsOpen: open }),
     branchPicker: null,
     prompt: null,
-    githubSetupOpen: false,
+    githubSignInOpen: false,
     output: [],
     outputOpen: false,
 
@@ -900,22 +925,41 @@ export const useStore = create<AppStore>()((set, get) => {
       resolve?.(value);
     },
 
-    // ---- GitHub 配置引导弹窗 ----
+    // ---- GitHub 登录 ----
 
-    promptGitHubSetup() {
-      return new Promise<string | null>((resolve) => {
-        // 若上一个引导尚未关闭，先按取消处理，避免其 Promise 永久挂起
-        githubSetupResolver?.(null);
-        githubSetupResolver = resolve;
-        set({ githubSetupOpen: true });
+    promptGitHubSignIn() {
+      return new Promise<GitHubAuth | null>((resolve) => {
+        // 若上一个窗口尚未关闭，先按取消处理，避免其 Promise 永久挂起
+        githubSignInResolver?.(null);
+        githubSignInResolver = resolve;
+        set({ githubSignInOpen: true });
       });
     },
 
-    resolveGitHubSetup(value) {
-      const resolve = githubSetupResolver;
-      githubSetupResolver = null;
-      set({ githubSetupOpen: false });
+    resolveGitHubSignIn(value) {
+      const resolve = githubSignInResolver;
+      githubSignInResolver = null;
+      set({ githubSignInOpen: false });
       resolve?.(value);
+    },
+
+    async signInGitHub() {
+      // 缓存的 token 仍有效：直接复用（不弹窗）
+      const cached = loadGitHubToken();
+      if (cached) {
+        try {
+          const login = await fetchGitHubLogin(cached);
+          saveGitHubToken(cached, login);
+          return { token: cached, login };
+        } catch {
+          clearGitHubToken();
+        }
+      }
+      const auth = await get().promptGitHubSignIn();
+      if (auth) {
+        saveGitHubToken(auth.token, auth.login);
+      }
+      return auth;
     },
 
     // ---- GIT 输出面板 ----
@@ -1020,16 +1064,17 @@ export const useStore = create<AppStore>()((set, get) => {
         await runAction(async () => {
           let text: string;
           const ask = get().promptInput;
+          const signIn = get().signInGitHub;
           if (op === 'fetch') {
-            text = await syncWithAuth(root, () => api.fetchAll(root), ask);
+            text = await syncWithAuth(root, () => api.fetchAll(root), ask, signIn);
           } else if (op === 'pull') {
-            text = await syncWithAuth(root, () => api.pull(root), ask);
+            text = await syncWithAuth(root, () => api.pull(root), ask, signIn);
           } else if (op === 'push') {
-            text = await syncWithAuth(root, () => api.push(root), ask);
+            text = await syncWithAuth(root, () => api.push(root), ask, signIn);
           } else {
             // 同步 = 先拉后推（对照 VS Code 的 sync）
-            await syncWithAuth(root, () => api.pull(root), ask);
-            text = await syncWithAuth(root, () => api.push(root), ask);
+            await syncWithAuth(root, () => api.pull(root), ask, signIn);
+            text = await syncWithAuth(root, () => api.push(root), ask, signIn);
           }
           set({
             notice: { level: 'success', text: text.split('\n')[0] || '完成' },

@@ -1,21 +1,7 @@
 import { confirm, open } from '@tauri-apps/plugin-dialog';
-import { openUrl } from '@tauri-apps/plugin-opener';
 import { api } from './api';
-import {
-  clearGitHubClientId,
-  clearGitHubToken,
-  fetchGitHubLogin,
-  fetchGitHubRepos,
-  loadGitHubClientId,
-  loadGitHubToken,
-  pollAccessToken,
-  requestDeviceCode,
-  saveGitHubClientId,
-  saveGitHubToken,
-  type DeviceCode,
-} from './github';
+import { fetchGitHubRepos } from './github';
 import { useStore } from './store';
-import { copyText } from './util';
 
 /**
  * Git 菜单动作的统一分发器：菜单里所有功能项（action id）的真正实现。
@@ -257,101 +243,12 @@ async function pickStashReference(repo: string, title: string): Promise<string |
 }
 
 /**
- * GitHub 授权登录（Device Flow，对照 VS Code 的 GitHub 授权体验）：
- * 已有有效 token 直接复用；否则显示验证码 + 打开浏览器授权 + 轮询自动完成。
- * 返回 token 与登录名；用户取消 / 失败返回 null。
- */
-async function ensureGitHubAuth(): Promise<{ token: string; login: string } | null> {
-  const s = useStore.getState();
-  const cached = loadGitHubToken();
-  if (cached) {
-    try {
-      const login = await fetchGitHubLogin(cached);
-      saveGitHubToken(cached, login);
-      return { token: cached, login };
-    } catch {
-      clearGitHubToken();
-    }
-  }
-  // 首次使用需要 OAuth App 的 Client ID（Device Flow 无需 client_secret）
-  let clientId = loadGitHubClientId();
-  if (!clientId) {
-    // 弹出带完整步骤说明的引导弹窗（可直接打开 GitHub 新建应用页、复制占位 URL）
-    const input = await s.promptGitHubSetup();
-    clientId = input?.trim() ?? '';
-    if (!clientId) {
-      return null;
-    }
-    saveGitHubClientId(clientId);
-  }
-  let dc: DeviceCode;
-  try {
-    dc = await requestDeviceCode(clientId);
-  } catch (e) {
-    clearGitHubClientId();
-    return showError(`GitHub 授权失败：${String(e)}（请检查 Client ID 是否正确）`);
-  }
-  // 打开浏览器 + 显示验证码等待弹窗；轮询成功时自动关闭弹窗继续
-  void openUrl(dc.verification_uri).catch(() => undefined);
-  let finished = false;
-  const token = await new Promise<string | null>((resolve) => {
-    void pollAccessToken(clientId, dc.device_code, dc.interval, dc.expires_in, () => finished)
-      .then((t) => {
-        s.resolvePrompt(dc.user_code);
-        if (!finished) {
-          finished = true;
-          resolve(t);
-        }
-      })
-      .catch((e) => {
-        s.resolvePrompt(null);
-        if (!finished) {
-          finished = true;
-          showError(`GitHub 授权失败：${String(e)}`);
-          resolve(null);
-        }
-      });
-    void s
-      .promptInput({
-        title: 'GitHub 授权',
-        placeholder: '验证码',
-        value: dc.user_code,
-        description: `已在浏览器打开 ${dc.verification_uri}：请输入验证码并授权（授权完成后自动继续，按 Esc 取消）`,
-        option: {
-          label: '复制验证码并打开浏览器',
-          icon: 'codicon-copy',
-          onClick: () => {
-            void copyText(dc.user_code);
-            void openUrl(dc.verification_uri).catch(() => undefined);
-          },
-        },
-      })
-      .then(() => {
-        if (!finished) {
-          finished = true;
-          resolve(null);
-        }
-      });
-  });
-  if (!token) {
-    return null;
-  }
-  try {
-    const login = await fetchGitHubLogin(token);
-    saveGitHubToken(token, login);
-    return { token, login };
-  } catch (e) {
-    return showError(`GitHub 授权失败：${String(e)}`);
-  }
-}
-
-/**
  * 从 GitHub 添加远程存储库（对照 VS Code）：授权登录 → 列出账号仓库 →
  * 选择仓库 → 询问远程名称 → 添加远程并保存凭据（后续 push/pull 免登录）。
  */
 async function addRemoteFromGitHub(repo: string): Promise<string | null> {
   const s = useStore.getState();
-  const auth = await ensureGitHubAuth();
+  const auth = await s.signInGitHub();
   if (!auth) {
     return null;
   }
