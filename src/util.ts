@@ -29,6 +29,26 @@ export function splitPath(path: string): { dir: string; name: string } {
   return { dir: path.slice(0, idx + 1), name: path.slice(idx + 1) };
 }
 
+/** 由仓库根 + 相对路径拼出系统风格绝对路径（Windows 用反斜杠） */
+export function absolutePath(repoRoot: string, relPath: string): string {
+  const sep = repoRoot.includes('\\') ? '\\' : '/';
+  return repoRoot + sep + (sep === '\\' ? relPath.replace(/\//g, '\\') : relPath);
+}
+
+/** 复制文本到剪贴板（优先 Clipboard API，失败时回退 execCommand） */
+export async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+}
+
 /** 按路径 / 名称 / 状态对更改排序（返回新数组，对照 VS Code SCM 排序选项） */
 export function sortChanges(
   changes: FileChange[],

@@ -1,7 +1,17 @@
+import { useState } from 'react';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { useStore } from '../store';
 import type { RepoState } from '../store';
-import { collectChanges, compactDir, splitPath, statusColorClass, type TreeEntry } from '../util';
+import {
+  absolutePath,
+  collectChanges,
+  compactDir,
+  copyText,
+  splitPath,
+  statusColorClass,
+  type TreeEntry,
+} from '../util';
+import { Menu } from './Menu';
 
 /** 文件变更的目录树 / 列表（对照 VS Code SCM 的 tree / list 视图 + 紧凑目录合并） */
 export function FileTree({
@@ -171,6 +181,7 @@ function FileNode({
 }) {
   const change = entry.change!;
   const { dir } = splitPath(change.path);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const selection = useStore((s) => s.selection);
   const selectChange = useStore((s) => s.selectChange);
   const stage = useStore((s) => s.stage);
@@ -202,62 +213,83 @@ function FileNode({
   };
 
   return (
-    <div
-      className={`tree-row file-row${selected ? ' selected' : ''}`}
-      style={{ paddingLeft: 6 + depth * 10 }}
-      title={change.originalPath ? `${change.originalPath} → ${change.path}` : change.path}
-      onClick={() => void selectChange(repo.info.root, change)}
-    >
-      <i className="codicon codicon-file tree-icon file-icon" />
-      <span className="tree-name" title={entry.name}>
-        {entry.name}
-      </span>
-      {showDir && dir && <span className="file-path">{dir.replace(/\/$/, '')}</span>}
-      <span className="row-actions" onClick={(e) => e.stopPropagation()}>
-        {/* title="" 用于屏蔽行级 title，避免与 data-tooltip 气泡同时出现 */}
-        <button
-          className="icon-btn small"
-          title=""
-          data-tooltip="打开文件"
-          onClick={() => void selectChange(repo.info.root, change)}
-        >
-          <i className="codicon codicon-go-to-file" />
-        </button>
-        {canDiscard && (
+    <>
+      <div
+        className={`tree-row file-row${selected ? ' selected' : ''}`}
+        style={{ paddingLeft: 6 + depth * 10 }}
+        title={change.originalPath ? `${change.originalPath} → ${change.path}` : change.path}
+        onClick={() => void selectChange(repo.info.root, change)}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setCtxMenu({ x: e.clientX, y: e.clientY });
+        }}
+      >
+        <i className="codicon codicon-file tree-icon file-icon" />
+        <span className="tree-name" title={entry.name}>
+          {entry.name}
+        </span>
+        {showDir && dir && <span className="file-path">{dir.replace(/\/$/, '')}</span>}
+        <span className="row-actions" onClick={(e) => e.stopPropagation()}>
+          {/* title="" 用于屏蔽行级 title，避免与 data-tooltip 气泡同时出现 */}
           <button
             className="icon-btn small"
             title=""
-            disabled={busy}
-            data-tooltip="放弃更改"
-            onClick={() => void onDiscard()}
+            data-tooltip="打开文件"
+            onClick={() => void selectChange(repo.info.root, change)}
           >
-            <i className="codicon codicon-discard" />
+            <i className="codicon codicon-go-to-file" />
           </button>
-        )}
-        {!isIndex && (
-          <button
-            className="icon-btn small"
-            title=""
-            disabled={busy}
-            data-tooltip={isMerge ? '标记为已解决' : '暂存更改'}
-            onClick={() => void stage(repo.info.root, [change])}
-          >
-            <i className="codicon codicon-plus" />
-          </button>
-        )}
-        {isIndex && (
-          <button
-            className="icon-btn small"
-            title=""
-            disabled={busy}
-            data-tooltip="取消暂存"
-            onClick={() => void unstage(repo.info.root, [change])}
-          >
-            <i className="codicon codicon-remove" />
-          </button>
-        )}
-      </span>
-      <span className={`change-status ${statusColorClass(change.status)}`}>{change.status}</span>
-    </div>
+          {canDiscard && (
+            <button
+              className="icon-btn small"
+              title=""
+              disabled={busy}
+              data-tooltip="放弃更改"
+              onClick={() => void onDiscard()}
+            >
+              <i className="codicon codicon-discard" />
+            </button>
+          )}
+          {!isIndex && (
+            <button
+              className="icon-btn small"
+              title=""
+              disabled={busy}
+              data-tooltip={isMerge ? '标记为已解决' : '暂存更改'}
+              onClick={() => void stage(repo.info.root, [change])}
+            >
+              <i className="codicon codicon-plus" />
+            </button>
+          )}
+          {isIndex && (
+            <button
+              className="icon-btn small"
+              title=""
+              disabled={busy}
+              data-tooltip="取消暂存"
+              onClick={() => void unstage(repo.info.root, [change])}
+            >
+              <i className="codicon codicon-remove" />
+            </button>
+          )}
+        </span>
+        <span className={`change-status ${statusColorClass(change.status)}`}>{change.status}</span>
+      </div>
+      {ctxMenu && (
+        <Menu
+          entries={[
+            { label: '复制相对路径', onSelect: () => void copyText(change.path) },
+            {
+              label: '复制绝对路径',
+              onSelect: () => void copyText(absolutePath(repo.info.root, change.path)),
+            },
+          ]}
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
+    </>
   );
 }

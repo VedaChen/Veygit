@@ -3,7 +3,9 @@ import { useStore } from '../store';
 import type { RepoState } from '../store';
 import type { CommitInfo } from '../types';
 import {
+  absolutePath,
   computeGraph,
+  copyText,
   formatRelativeTime,
   GRAPH_LANE_WIDTH,
   GRAPH_ROW_HEIGHT,
@@ -259,6 +261,8 @@ function GraphList({
   showRepoName?: boolean;
 }) {
   const layout = useMemo(() => computeGraph(commits), [commits]);
+  // 提交展开后的文件行右键菜单（坐标 + 目标文件路径）
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
   const selection = useStore((s) => s.selection);
   const selectCommit = useStore((s) => s.selectCommit);
   const expandedCommit = useStore((s) => s.expandedCommit);
@@ -327,6 +331,11 @@ function GraphList({
                         e.stopPropagation();
                         void selectCommitFile(repo.info.root, c.hash, c.subject, f);
                       }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setCtxMenu({ x: e.clientX, y: e.clientY, path: f.path });
+                      }}
                     >
                       <i className="codicon codicon-file" />
                       <span className="graph-file-name">{name}</span>
@@ -342,6 +351,20 @@ function GraphList({
           </Fragment>
         );
       })}
+      {ctxMenu && (
+        <Menu
+          entries={[
+            { label: '复制相对路径', onSelect: () => void copyText(ctxMenu.path) },
+            {
+              label: '复制绝对路径',
+              onSelect: () => void copyText(absolutePath(repo.info.root, ctxMenu.path)),
+            },
+          ]}
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
     </div>
   );
 }
