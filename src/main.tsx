@@ -7,9 +7,13 @@ import './styles.css';
 import './monaco-setup';
 import App from './App';
 import { loadStoredAppearance, resolveTheme } from './theme-mode';
+import { applyZoom } from './zoom';
 
 // 渲染前先同步应用初始主题（读取 localStorage + 系统偏好），避免启动闪屏
 document.documentElement.dataset.theme = resolveTheme(loadStoredAppearance());
+
+// 渲染前同步应用初始缩放（避免启动闪屏）
+applyZoom();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

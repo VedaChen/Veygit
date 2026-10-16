@@ -10,6 +10,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { PromptHost } from './components/PromptHost';
 import { OutputPanel } from './components/OutputPanel';
 import { TitleBar } from './components/TitleBar';
+import { registerZoomShortcuts } from './zoom';
 
 export default function App() {
   const appearance = useStore((s) => s.appearance);
@@ -17,11 +18,15 @@ export default function App() {
   useEffect(() => {
     void useStore.getState().init();
 
+    // 全局缩放快捷键（Ctrl+= / Ctrl+- / Ctrl+0，capture 阶段优先于 Monaco）
+    const unregisterZoom = registerZoomShortcuts();
+
     // 文件监听（Rust 侧 notify）推送的仓库变化事件，payload = 仓库根路径
     const unlisten = listen<string>('repo-changed', (e) => {
       void useStore.getState().refresh(e.payload);
     });
     return () => {
+      unregisterZoom();
       void unlisten.then((fn) => fn());
     };
   }, []);
