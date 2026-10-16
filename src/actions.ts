@@ -1,5 +1,19 @@
 import { confirm, open } from '@tauri-apps/plugin-dialog';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { api } from './api';
+import {
+  clearGitHubClientId,
+  clearGitHubToken,
+  fetchGitHubLogin,
+  fetchGitHubRepos,
+  loadGitHubClientId,
+  loadGitHubToken,
+  pollAccessToken,
+  requestDeviceCode,
+  saveGitHubClientId,
+  saveGitHubToken,
+  type DeviceCode,
+} from './github';
 import { useStore } from './store';
 
 /**
@@ -239,6 +253,148 @@ async function pickStashReference(repo: string, title: string): Promise<string |
       value: st.reference,
     })),
   });
+}
+
+/**
+ * GitHub 授权登录（Device Flow，对照 VS Code 的 GitHub 授权体验）：
+ * 已有有效 token 直接复用；否则显示验证码 + 打开浏览器授权 + 轮询自动完成。
+ * 返回 token 与登录名；用户取消 / 失败返回 null。
+ */
+async function ensureGitHubAuth(): Promise<{ token: string; login: string } | null> {
+  const s = useStore.getState();
+  const cached = loadGitHubToken();
+  if (cached) {
+    try {
+      const login = await fetchGitHubLogin(cached);
+      saveGitHubToken(cached, login);
+      return { token: cached, login };
+    } catch {
+      clearGitHubToken();
+    }
+  }
+  // 首次使用需要 OAuth App 的 Client ID（Device Flow 无需 client_secret）
+  let clientId = loadGitHubClientId();
+  if (!clientId) {
+    const input = await s.promptInput({
+      title: 'GitHub 授权',
+      placeholder: 'OAuth 应用 Client ID',
+      description:
+        '首次使用需配置：GitHub → Settings → Developer settings → OAuth Apps → 新建应用并勾选 Enable Device Flow，然后将 Client ID 粘贴到这里',
+    });
+    clientId = input?.trim() ?? '';
+    if (!clientId) {
+      return null;
+    }
+    saveGitHubClientId(clientId);
+  }
+  let dc: DeviceCode;
+  try {
+    dc = await requestDeviceCode(clientId);
+  } catch (e) {
+    clearGitHubClientId();
+    return showError(`GitHub 授权失败：${String(e)}（请检查 Client ID 是否正确）`);
+  }
+  // 打开浏览器 + 显示验证码等待弹窗；轮询成功时自动关闭弹窗继续
+  void openUrl(dc.verification_uri).catch(() => undefined);
+  let finished = false;
+  const token = await new Promise<string | null>((resolve) => {
+    void pollAccessToken(clientId, dc.device_code, dc.interval, dc.expires_in, () => finished)
+      .then((t) => {
+        s.resolvePrompt(dc.user_code);
+        if (!finished) {
+          finished = true;
+          resolve(t);
+        }
+      })
+      .catch((e) => {
+        s.resolvePrompt(null);
+        if (!finished) {
+          finished = true;
+          showError(`GitHub 授权失败：${String(e)}`);
+          resolve(null);
+        }
+      });
+    void s
+      .promptInput({
+        title: 'GitHub 授权',
+        placeholder: '验证码',
+        value: dc.user_code,
+        description: `已在浏览器打开 ${dc.verification_uri}：请输入验证码并授权（授权完成后自动继续，按 Esc 取消）`,
+      })
+      .then(() => {
+        if (!finished) {
+          finished = true;
+          resolve(null);
+        }
+      });
+  });
+  if (!token) {
+    return null;
+  }
+  try {
+    const login = await fetchGitHubLogin(token);
+    saveGitHubToken(token, login);
+    return { token, login };
+  } catch (e) {
+    return showError(`GitHub 授权失败：${String(e)}`);
+  }
+}
+
+/**
+ * 从 GitHub 添加远程存储库（对照 VS Code）：授权登录 → 列出账号仓库 →
+ * 选择仓库 → 询问远程名称 → 添加远程并保存凭据（后续 push/pull 免登录）。
+ */
+async function addRemoteFromGitHub(repo: string): Promise<string | null> {
+  const s = useStore.getState();
+  const auth = await ensureGitHubAuth();
+  if (!auth) {
+    return null;
+  }
+  let repos;
+  try {
+    repos = await fetchGitHubRepos(auth.token);
+  } catch (e) {
+    return showError(String(e));
+  }
+  if (repos.length === 0) {
+    return showError('GitHub 账号下没有可用仓库');
+  }
+  const picked = await s.promptPick({
+    title: '',
+    placeholder: '选择要添加为远程存储库的 GitHub 仓库',
+    items: repos.map((r) => ({
+      label: r.full_name,
+      description: [r.private ? '私有' : '公开', r.description ?? ''].filter(Boolean).join(' · '),
+      icon: r.private ? 'codicon-lock' : 'codicon-repo',
+      value: r.full_name,
+    })),
+  });
+  if (!picked) {
+    return null;
+  }
+  const target = repos.find((r) => r.full_name === picked);
+  if (!target) {
+    return null;
+  }
+  // 远程名称（默认 origin，对照 VS Code）
+  const name = await s.promptInput({
+    title: '',
+    placeholder: '远程名称',
+    value: 'origin',
+    description: '提供远程存储库的名称 (按 "Enter" 以确认或按 "Esc" 以取消)',
+  });
+  const remoteName = name?.trim();
+  if (!remoteName) {
+    return null;
+  }
+  const out = await api.remoteAdd(repo, remoteName, target.clone_url);
+  // 授权 token 存入凭据管理器：后续 push/pull 直接复用（HTTPS 认证）
+  await api
+    .storeCredentials(repo, 'https', 'github.com', auth.login, auth.token)
+    .catch(() => undefined);
+  await refreshBranches(repo);
+  showInfo(`已添加远程 ${remoteName}（${target.full_name}）`);
+  return out;
 }
 
 /** clone 后把新仓库加入列表并激活（对照 store.openRepository 的打开流程） */
@@ -648,7 +804,8 @@ export async function runGitAction(action: string, repo: string): Promise<void> 
       case 'remoteAdd':
         await run('remote add', async () => {
           const s = useStore.getState();
-          // 第一步：URL（或选择仓库源）——选项点击打开 GitHub 新建仓库页，弹窗保持打开
+          // 第一步：URL（或选择"从 GitHub 添加"走授权登录 → 列出账号仓库）
+          let githubClicked = false;
           const url = await s.promptInput({
             title: '',
             placeholder: '提供仓库 URL 或选择仓库源。',
@@ -656,9 +813,15 @@ export async function runGitAction(action: string, repo: string): Promise<void> 
             option: {
               label: '从 GitHub 添加远程存储库',
               icon: 'codicon-github',
-              url: 'https://github.com/new',
+              onClick: () => {
+                githubClicked = true;
+                s.resolvePrompt(null);
+              },
             },
           });
+          if (githubClicked) {
+            return await addRemoteFromGitHub(repo);
+          }
           const remoteUrl = url?.trim();
           if (!remoteUrl) {
             return null;

@@ -63,8 +63,8 @@ export interface PromptState {
   password?: boolean;
   /** input 模式：输入框下方的提示文字（如 "Git: https://github.com (按 ... 取消)"） */
   description?: string;
-  /** input 模式：输入框下方的可点击选项（点击打开 url，弹窗保持打开；对照 VS Code "从 GitHub 添加远程存储库"） */
-  option?: { label: string; icon?: string; url: string };
+  /** input 模式：输入框下方的可点击选项（默认点击打开 url；提供 onClick 时执行自定义逻辑） */
+  option?: { label: string; icon?: string; url?: string; onClick?: () => void };
   /** pick 模式选项 */
   items?: PromptPickItem[];
 }
@@ -109,8 +109,8 @@ interface AppStore {
     password?: boolean;
     /** 输入框下方的提示文字 */
     description?: string;
-    /** 输入框下方的可点击选项（点击打开 url） */
-    option?: { label: string; icon?: string; url: string };
+    /** 输入框下方的可点击选项（点击打开 url 或执行自定义逻辑） */
+    option?: { label: string; icon?: string; url?: string; onClick?: () => void };
   }) => Promise<string | null>;
   /** 单选列表弹窗（返回 null = 用户取消） */
   promptPick: (opts: {

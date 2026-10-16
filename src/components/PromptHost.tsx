@@ -91,7 +91,12 @@ export function PromptHost(): ReactElement | null {
             className="picker-option"
             onMouseDown={(e) => {
               e.stopPropagation();
-              void openUrl(prompt.option!.url).catch(() => undefined);
+              const opt = prompt.option!;
+              if (opt.onClick) {
+                opt.onClick();
+              } else if (opt.url) {
+                void openUrl(opt.url).catch(() => undefined);
+              }
             }}
           >
             {prompt.option.icon && <i className={`codicon ${prompt.option.icon}`} />}
