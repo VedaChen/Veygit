@@ -197,23 +197,39 @@ pub async fn push(state: State<'_, AppState>, repo: String) -> CmdResult<String>
     with_repo(&state, &repo, ops::push)
 }
 
+/// 读取提交历史。refs 为空时只看 HEAD；可传 ["--all"] 或分支/引用名（如 "origin/dev"）
 #[tauri::command]
 pub async fn get_log(
     state: State<'_, AppState>,
     repo: String,
     limit: Option<u32>,
     skip: Option<u32>,
+    refs: Option<Vec<String>>,
 ) -> CmdResult<Vec<CommitInfo>> {
     with_repo(&state, &repo, |git| {
-        log::get_log(git, limit.unwrap_or(100), skip.unwrap_or(0))
+        log::get_log(git, limit.unwrap_or(100), skip.unwrap_or(0), refs)
     })
 }
 
+/// 某个提交中变更的文件列表（供历史视图展开提交）
+#[tauri::command]
+pub async fn get_commit_files(
+    state: State<'_, AppState>,
+    repo: String,
+    hash: String,
+) -> CmdResult<Vec<CommitFile>> {
+    with_repo(&state, &repo, |git| log::get_commit_files(git, &hash))
+}
+
+/// 单个提交的 patch；指定 path 时只看该提交对指定文件的改动
 #[tauri::command]
 pub async fn get_commit_patch(
     state: State<'_, AppState>,
     repo: String,
     hash: String,
+    path: Option<String>,
 ) -> CmdResult<String> {
-    with_repo(&state, &repo, |git| diff::commit_patch(git, &hash))
+    with_repo(&state, &repo, |git| {
+        diff::commit_patch(git, &hash, path.as_deref())
+    })
 }

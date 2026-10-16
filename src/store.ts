@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { api } from './api';
 import type {
   BranchInfo,
+  CommitFile,
   CommitInfo,
   DiffContent,
   FileChange,
@@ -22,7 +23,7 @@ export interface RepoState {
 
 export type Selection =
   | { kind: 'change'; repo: string; path: string; staged: boolean; originalPath: string | null }
-  | { kind: 'commit'; repo: string; hash: string; subject: string }
+  | { kind: 'commit'; repo: string; hash: string; subject: string; file?: string }
   | null;
 
 export interface Notice {
@@ -100,6 +101,25 @@ interface AppStore {
   sync: (root: string, op: 'fetch' | 'pull' | 'push' | 'sync') => Promise<void>;
   loadHistory: (root: string) => Promise<void>;
   clearNotice: () => void;
+
+  // ---- 图表（对照 VS Code SCM Graph） ----
+  /** 图表显示的存储库：'auto' 跟随活动仓库，或指定仓库根路径 */
+  graphRepo: 'auto' | string;
+  setGraphRepo: (value: 'auto' | string) => void;
+  /** 图表历史记录项引用过滤：'auto'（当前引用）/ 'all'（全部）/ 指定引用列表 */
+  graphRefs: 'auto' | 'all' | string[];
+  setGraphRefs: (value: 'auto' | 'all' | string[]) => void;
+  /** 图表视图形态：列表 / 树（多仓库分组） */
+  graphView: 'list' | 'tree';
+  setGraphView: (value: 'list' | 'tree') => void;
+  /** 当前展开的提交 hash（null = 无） */
+  expandedCommit: string | null;
+  /** 提交 hash → 变更文件列表缓存（展开时懒加载） */
+  commitFiles: Record<string, CommitFile[]>;
+  /** 展开/收起提交（展开时懒加载文件列表） */
+  toggleCommitExpand: (repo: string, hash: string) => Promise<void>;
+  /** 打开提交中某文件的 patch（右侧显示） */
+  selectCommitFile: (repo: string, hash: string, subject: string, file: CommitFile) => Promise<void>;
 }
 
 /** SCM 文件视图模式：列表 / 树（对照 VS Code scm.defaultViewMode） */
@@ -302,6 +322,28 @@ export const useStore = create<AppStore>()((set, get) => {
     },
     branchPicker: null,
 
+    // ---- 图表（对照 VS Code SCM Graph） ----
+    graphRepo: 'auto',
+    setGraphRepo: (value) => {
+      // 切换图表仓库后，提交展开状态与文件缓存失效
+      set({ graphRepo: value, expandedCommit: null, commitFiles: {} });
+    },
+    graphRefs: 'auto',
+    setGraphRefs: (value) => {
+      set({ graphRefs: value });
+      // 选择引用过滤后让图表立即重新加载
+      const active = get().activeRoot;
+      if (active) {
+        void get().loadHistory(active);
+      }
+    },
+    graphView: 'list',
+    setGraphView: (value) => {
+      set({ graphView: value });
+    },
+    expandedCommit: null,
+    commitFiles: {},
+
     async init() {
       if (initialized) {
         return;
@@ -460,6 +502,42 @@ export const useStore = create<AppStore>()((set, get) => {
         const patch = await api.getCommitPatch(repo, hash);
         const current = get().selection;
         if (current?.kind === 'commit' && current.hash === hash) {
+          set({ patch });
+        }
+      } catch (e) {
+        set({ notice: { level: 'error', text: String(e) } });
+      }
+    },
+
+    async toggleCommitExpand(repo, hash) {
+      // 再次点击已展开的提交 → 收起
+      if (get().expandedCommit === hash) {
+        set({ expandedCommit: null });
+        return;
+      }
+      set({ expandedCommit: hash });
+      // 文件列表懒加载并缓存
+      if (get().commitFiles[hash]) {
+        return;
+      }
+      try {
+        const files = await api.getCommitFiles(repo, hash);
+        set((state) => ({ commitFiles: { ...state.commitFiles, [hash]: files } }));
+      } catch (e) {
+        set({ notice: { level: 'error', text: String(e) } });
+      }
+    },
+
+    async selectCommitFile(repo, hash, subject, file) {
+      set({
+        selection: { kind: 'commit', repo, hash, subject, file: file.path },
+        diff: null,
+        patch: null,
+      });
+      try {
+        const patch = await api.getCommitPatch(repo, hash, file.path);
+        const current = get().selection;
+        if (current?.kind === 'commit' && current.hash === hash && current.file === file.path) {
           set({ patch });
         }
       } catch (e) {
@@ -670,8 +748,11 @@ export const useStore = create<AppStore>()((set, get) => {
       if (!get().repos.some((r) => r.info.root === root)) {
         return;
       }
+      // 按图表引用过滤生成 git log 的 refs 参数
+      const mode = get().graphRefs;
+      const refs = mode === 'auto' ? undefined : mode === 'all' ? ['--all'] : mode;
       try {
-        const commits = await api.getLog(root, 100, 0);
+        const commits = await api.getLog(root, 100, 0, refs);
         updateRepo(root, { commits, historyLoaded: true });
       } catch (e) {
         set({ notice: { level: 'error', text: String(e) } });

@@ -21,7 +21,17 @@ export function DiffViewer() {
     if (patch === null) {
       return <EmptyState icon="codicon-loading spinning" text="加载提交中..." />;
     }
-    return <PatchView title={`${selection.subject}`} patch={patch} />;
+    // 选中提交中的某个文件时显示文件名，否则显示整个提交
+    const label = selection.file
+      ? `${splitPath(selection.file).name} (${selection.hash.slice(0, 7)})`
+      : `提交 ${selection.subject}`;
+    return (
+      <PatchView
+        title={label}
+        icon={selection.file ? 'codicon-file' : 'codicon-git-commit'}
+        patch={patch}
+      />
+    );
   }
 
   if (!diff) {
@@ -129,7 +139,16 @@ function DiffView({
   );
 }
 
-function PatchView({ title, patch }: { title: string; patch: string }) {
+function PatchView({
+  title,
+  icon = 'codicon-git-commit',
+  patch,
+}: {
+  title: string;
+  /** 标签图标（整个提交用 git-commit，单文件用 file） */
+  icon?: string;
+  patch: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const closeSelection = useStore((s) => s.clearSelection);
@@ -177,8 +196,8 @@ function PatchView({ title, patch }: { title: string; patch: string }) {
     <div className="diff-view">
       <div className="tab-bar">
         <div className="tab active" title={title}>
-          <i className="codicon codicon-git-commit" />
-          <span className="tab-name">{`提交 ${title}`}</span>
+          <i className={`codicon ${icon}`} />
+          <span className="tab-name">{title}</span>
           <button className="tab-close" title="关闭" onClick={() => closeSelection()}>
             <i className="codicon codicon-close" />
           </button>

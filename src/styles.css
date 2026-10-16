@@ -224,6 +224,9 @@ i.codicon {
 .section-actions {
   display: flex;
   gap: 2px;
+  flex-wrap: nowrap; /* 图表标题栏含存储库/引用选择 + 5 个图标按钮，禁止换行 */
+  align-items: center; /* 不同高度的按钮（20px 下拉 / 26px 图标）垂直居中 */
+  min-width: 0; /* 空间不足时允许整体收缩（配合 .graph-select-btn 的省略号） */
 }
 
 /* ---------- 存储库列表 ---------- */
@@ -1223,4 +1226,157 @@ i.codicon {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---------- 图表（SCM Graph）增强：标题栏下拉选择 / 仓库名 / tree 分组 / 提交文件列表 ---------- */
+
+/* 图表标题栏的“选择”按钮（存储库 / 引用下拉，对照 VS Code graph 标题栏） */
+.graph-select-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 4px;
+  color: var(--fg);
+  font-size: 12px;
+  max-width: 110px;
+  min-width: 0; /* 允许收缩：配合 .section-actions 的 min-width: 0，空间不足时文字出省略号 */
+}
+
+.graph-select-btn:hover {
+  background: rgba(255, 255, 255, 0.1); /* 与 .icon-btn:hover 一致 */
+}
+
+.graph-select-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-select-btn .codicon-chevron-down {
+  font-size: 12px;
+}
+
+/* 提交行上的仓库名（灰色小字，tree 模式用于标注来源存储库） */
+.graph-commit-repo {
+  color: var(--fg-dim);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* tree 模式：按存储库分组的提交列表 */
+.graph-repo-group {
+  border-bottom: 1px solid var(--border);
+}
+
+.graph-repo-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* 提交展开的文件列表 */
+.graph-files {
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--border);
+}
+
+.graph-file-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px 0 26px; /* 左侧缩进，与提交内容对齐（避开提交图形列） */
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.graph-file-row:hover {
+  background: var(--bg-hover);
+}
+
+.graph-file-row .codicon {
+  font-size: 13px;
+  color: var(--fg-dim);
+  flex-shrink: 0;
+}
+
+.graph-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-file-dir {
+  color: var(--fg-dim);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- 选择器弹窗（QuickPick）扩展：批量勾选 / 行尾标签 ---------- */
+
+/* “已选 N 项”计数文字（弹窗底部操作行，靠左） */
+.picker-badge {
+  color: var(--fg-dim);
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 确定按钮（主色，与 .commit-btn 等主按钮同款配色） */
+.picker-ok {
+  height: 22px;
+  padding: 0 12px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.picker-ok:hover {
+  background: var(--accent-hover);
+}
+
+.picker-ok:disabled {
+  opacity: 0.5; /* 与全局 button:disabled 一致 */
+  cursor: default;
+}
+
+/* 勾选 / 占位图标：固定宽度保证多行对齐（同 .flyout-item-check 规格） */
+.picker-check {
+  width: 16px;
+  flex: none;
+  font-size: 13px;
+}
+
+/* 列表行右侧的灰色标签（分支 / 远程分支）。
+   所在行 .picker-item-line1 / .picker-item-line2 已是 flex 布局，
+   margin-left: auto 会把标签推到行尾（.picker-item 本身不是 flex，勿直接挂行上） */
+.picker-label {
+  margin-left: auto;
+  color: var(--fg-dim);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* 列表项的描述性灰字（名称下方的次要说明） */
+.picker-desc {
+  color: var(--fg-dim);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import type {
   BranchInfo,
+  CommitFile,
   CommitInfo,
   DiffContent,
   RepoInfo,
@@ -63,9 +64,12 @@ export const api = {
 
   push: (repo: string) => invoke<string>('push', { repo }),
 
-  getLog: (repo: string, limit?: number, skip?: number) =>
-    invoke<CommitInfo[]>('get_log', { repo, limit, skip }),
+  getLog: (repo: string, limit?: number, skip?: number, refs?: string[]) =>
+    invoke<CommitInfo[]>('get_log', { repo, limit, skip, refs }),
 
-  getCommitPatch: (repo: string, hash: string) =>
-    invoke<string>('get_commit_patch', { repo, hash }),
+  getCommitPatch: (repo: string, hash: string, path?: string) =>
+    invoke<string>('get_commit_patch', { repo, hash, path }),
+
+  getCommitFiles: (repo: string, hash: string) =>
+    invoke<CommitFile[]>('get_commit_files', { repo, hash }),
 };

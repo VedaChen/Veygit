@@ -72,9 +72,15 @@ pub fn get_diff(
     })
 }
 
-/// 单个提交的完整 patch（含 commit 头部信息），供历史视图展示
-pub fn commit_patch(git: &Git, hash: &str) -> Result<String> {
-    let out = git.run_raw(&["show", "--no-color", "--patch", hash])?;
+/// 单个提交的 patch（含 commit 头部信息），供历史视图展示。
+/// 指定 path 时通过 `-- <path>` 只输出该提交对指定文件的补丁。
+pub fn commit_patch(git: &Git, hash: &str, path: Option<&str>) -> Result<String> {
+    let mut args: Vec<&str> = vec!["show", "--no-color", "--patch", hash];
+    if let Some(path) = path {
+        args.push("--");
+        args.push(path);
+    }
+    let out = git.run_raw(&args)?;
     if out.code != 0 {
         return Err(anyhow!(out.combined()));
     }

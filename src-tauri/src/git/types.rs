@@ -72,6 +72,16 @@ pub struct CommitInfo {
     pub parents: Vec<String>,
 }
 
+/// 提交中变更的文件（对照 VS Code graph 提交展开的文件列表）
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitFile {
+    /// 相对仓库根的路径
+    pub path: String,
+    /// 单字母状态：M/A/D/R/C…
+    pub status: String,
+}
+
 /// diff 内容：kind = "text" | "binary" | "tooLarge"
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]

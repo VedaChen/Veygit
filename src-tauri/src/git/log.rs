@@ -1,25 +1,40 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 use super::exec::Git;
-use super::types::CommitInfo;
+use super::types::{CommitFile, CommitInfo};
 
 /// 读取提交历史。
 /// 字段分隔用 0x1f（unit separator），条目分隔用 -z 的 \0。
 /// `%D` 形如 "HEAD -> main, origin/main, tag: v1.0"。
-pub fn get_log(git: &Git, limit: u32, skip: u32) -> Result<Vec<CommitInfo>> {
+/// `refs`：None/空 → 只看 HEAD；含 "--all" → 全部引用；其余每个元素作为 <commit> 参数。
+pub fn get_log(
+    git: &Git,
+    limit: u32,
+    skip: u32,
+    refs: Option<Vec<String>>,
+) -> Result<Vec<CommitInfo>> {
     let format = "%H\u{1f}%h\u{1f}%an\u{1f}%ae\u{1f}%at\u{1f}%s\u{1f}%D\u{1f}%P";
     let max_count = format!("--max-count={}", limit);
     let skip_arg = format!("--skip={}", skip);
     let format_arg = format!("--format={}", format);
 
-    let out = git.run_raw(&[
-        "log",
-        "-z",
-        "--no-color",
-        &max_count,
-        &skip_arg,
-        &format_arg,
-    ])?;
+    // 规范化引用参数：去空白后，空 → HEAD；"--all" 由 git log 识别为选项，其余按 <commit> 处理
+    let ref_args: Vec<&str> = refs
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .map(|r| r.trim())
+        .filter(|r| !r.is_empty())
+        .collect();
+
+    let mut args: Vec<&str> = vec!["log", "-z", "--no-color", &max_count, &skip_arg, &format_arg];
+    if ref_args.is_empty() {
+        args.push("HEAD");
+    } else {
+        args.extend(ref_args);
+    }
+
+    let out = git.run_raw(&args)?;
 
     // 空仓库（还没有任何提交）时 git log 失败，返回空列表
     if out.code != 0 {
@@ -61,4 +76,43 @@ pub fn get_log(git: &Git, limit: u32, skip: u32) -> Result<Vec<CommitInfo>> {
     }
 
     Ok(commits)
+}
+
+/// 读取某个提交中变更的文件列表（供历史视图展开提交）。
+/// 每行形如 "M\tpath"；--no-renames 避免 rename 输出 R100 双路径。
+pub fn get_commit_files(git: &Git, hash: &str) -> Result<Vec<CommitFile>> {
+    let out = git.run_raw(&[
+        "-c",
+        "core.quotepath=false",
+        "show",
+        "--format=",
+        "--name-status",
+        "--no-renames",
+        hash,
+    ])?;
+    if out.code != 0 {
+        return Err(anyhow!(out.combined()));
+    }
+
+    let mut files: Vec<CommitFile> = Vec::new();
+    for line in out.stdout_string().lines() {
+        // 跳过 --format= 产生的空行
+        let line = line.trim_end();
+        if line.is_empty() {
+            continue;
+        }
+        let mut fields = line.splitn(2, '\t');
+        let status = fields.next().unwrap_or("").trim();
+        let path = fields.next().unwrap_or("").trim();
+        if status.is_empty() || path.is_empty() {
+            continue;
+        }
+        files.push(CommitFile {
+            path: path.to_string(),
+            // 单字母状态：M/A/D/R/C…（rename 分数等只取首字符）
+            status: status.chars().next().map(|c| c.to_string()).unwrap_or_default(),
+        });
+    }
+
+    Ok(files)
 }

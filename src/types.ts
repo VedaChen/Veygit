@@ -54,6 +54,14 @@ export interface CommitInfo {
   parents: string[];
 }
 
+/** 提交中变更的文件（对照 VS Code graph 提交展开的文件列表） */
+export interface CommitFile {
+  /** 相对仓库根的路径 */
+  path: string;
+  /** 单字母状态：M/A/D/R/C… */
+  status: string;
+}
+
 export type DiffKind = 'text' | 'binary' | 'tooLarge';
 
 export interface DiffContent {

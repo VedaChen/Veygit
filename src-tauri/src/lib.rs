@@ -25,6 +25,7 @@ pub fn run() {
             commands::pull,
             commands::push,
             commands::get_log,
+            commands::get_commit_files,
             commands::get_commit_patch,
         ])
         .run(tauri::generate_context!())
