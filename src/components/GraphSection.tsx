@@ -287,6 +287,8 @@ function GraphList({
         // 行宽按该行自身车道数计算：描述自动贴近车道线（对照 VS Code）
         const rowWidth =
           Math.max(row.top.length, row.bottom.length, row.lane + 1) * GRAPH_LANE_WIDTH + 6;
+        // 该行节点中心 x（展开文件列表的竖线对齐此处，对照 VS Code）
+        const nodeX = row.lane * GRAPH_LANE_WIDTH + GRAPH_LANE_WIDTH / 2;
         // 展开的提交行高亮（点击行 = 展开/收起文件列表）
         const selected = expandedCommit === c.hash;
 
@@ -357,7 +359,14 @@ function GraphList({
               </div>
             </div>
             {expandedCommit === c.hash && (
-              <div className="graph-files" style={{ paddingLeft: rowWidth + 4 }}>
+              <div
+                className="graph-files"
+                style={{
+                  marginLeft: nodeX - 1,
+                  borderLeft: `2px solid ${laneColor(row.lane)}`,
+                  paddingLeft: 10,
+                }}
+              >
                 {(commitFiles[c.hash] ?? []).map((f) => {
                   const { dir, name } = splitPath(f.path);
                   return (

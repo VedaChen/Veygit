@@ -948,6 +948,7 @@ i.codicon {
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  min-height: 0; /* flex 嵌套滚动：允许内容在内部滚动（如 Markdown 预览） */
 }
 
 /* ---------- 编辑器标签栏（对照 VS Code diff 标签） ---------- */
@@ -1311,7 +1312,7 @@ i.codicon {
   align-items: center;
   gap: 5px;
   height: 22px;
-  padding: 0 8px 0 26px; /* 左侧缩进，与提交内容对齐（避开提交图形列） */
+  padding: 0 8px 0 6px; /* 缩进由 .graph-files 容器的 margin/竖线/padding 提供 */
   cursor: pointer;
   font-size: 12px;
 }
