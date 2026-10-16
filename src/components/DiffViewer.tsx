@@ -115,7 +115,13 @@ function DiffView({
     const modified = monaco.editor.createModel(diff.modified, lang);
     editor.setModel({ original, modified });
     return () => {
-      editor.setModel(null);
+      // 组件卸载时清理顺序为「先 dispose editor（创建 effect 先注册先清理）再执行这里」，
+      // 对已释放的 editor 调用 setModel 会抛 "InstantiationService has been disposed"，忽略即可
+      try {
+        editor.setModel(null);
+      } catch {
+        // editor 已被释放
+      }
       original.dispose();
       modified.dispose();
     };
@@ -170,7 +176,12 @@ function PatchView({ title, patch }: { title: string; patch: string }) {
     const model = monaco.editor.createModel(patch, 'diff');
     editor.setModel(model);
     return () => {
-      editor.setModel(null);
+      // 同 DiffView：editor 可能已被卸载流程先释放
+      try {
+        editor.setModel(null);
+      } catch {
+        // editor 已被释放
+      }
       model.dispose();
     };
   }, [patch]);
