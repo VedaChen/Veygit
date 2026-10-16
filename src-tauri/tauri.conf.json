@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Git Panel",
+  "productName": "Veygit",
   "version": "0.1.0",
-  "identifier": "com.vscodegitpanel.app",
+  "identifier": "com.veygit.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,11 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "Git Panel",
+        "title": "Veygit",
         "width": 1280,
         "height": 840,
         "minWidth": 920,
-        "minHeight": 560
+        "minHeight": 560,
+        "decorations": false
       }
     ],
     "security": {

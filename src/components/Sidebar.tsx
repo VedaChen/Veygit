@@ -12,8 +12,8 @@ export function Sidebar() {
     <aside className="sidebar" style={{ width: sidebarWidth }}>
       <div className="sidebar-header">
         <div className="sidebar-header-title">
-          <img className="sidebar-logo" src="/logo.png" alt="Git Panel" />
-          <span className="sidebar-title">源代码管理</span>
+          <img className="sidebar-logo" src="/logo.png" alt="Veygit" />
+          <span className="sidebar-title">Veygit</span>
         </div>
         <div className="sidebar-header-actions">
           <button

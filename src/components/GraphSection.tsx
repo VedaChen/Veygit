@@ -20,12 +20,6 @@ import { RepoPicker, RefPicker } from './GraphPickers';
 import { Menu } from './Menu';
 import { SectionHeader } from './Section';
 
-/** 从仓库根路径取显示名（最后一段） */
-function repoNameOf(root: string): string {
-  const parts = root.split(/[\\/]/).filter(Boolean);
-  return parts.length > 0 ? parts[parts.length - 1] : root;
-}
-
 export function GraphSection() {
   const repos = useStore((s) => s.repos);
   const activeRoot = useStore((s) => s.activeRoot);
@@ -107,7 +101,6 @@ export function GraphSection() {
       <SectionHeader
         id="section:graph"
         title="图表"
-        count={repo?.commits.length || undefined}
         actions={
           <>
             <button
@@ -116,7 +109,7 @@ export function GraphSection() {
               onClick={() => setPicker('repo')}
             >
               <i className="codicon codicon-repo" />
-              <span>{graphRepo === 'auto' ? '自动' : repoNameOf(graphRepo)}</span>
+              <span>{repo ? repo.info.name : '自动'}</span>
               <i className="codicon codicon-chevron-down" />
             </button>
             <button
@@ -197,7 +190,7 @@ export function GraphSection() {
           {graphView === 'tree' ? (
             <GraphTree repos={repos} />
           ) : repo && repo.commits.length > 0 ? (
-            <GraphList repo={repo} commits={repo.commits} showRepoName />
+            <GraphList repo={repo} commits={repo.commits} />
           ) : (
             <div className="hint-row">没有提交历史</div>
           )}
@@ -253,18 +246,13 @@ function GraphTree({ repos }: { repos: RepoState[] }) {
 function GraphList({
   repo,
   commits,
-  showRepoName = false,
 }: {
   repo: RepoState;
   commits: CommitInfo[];
-  /** list 模式下每行附带仓库名（tree 模式下由分组头承担） */
-  showRepoName?: boolean;
 }) {
   const layout = useMemo(() => computeGraph(commits), [commits]);
   // 提交展开后的文件行右键菜单（坐标 + 目标文件路径）
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
-  const selection = useStore((s) => s.selection);
-  const selectCommit = useStore((s) => s.selectCommit);
   const expandedCommit = useStore((s) => s.expandedCommit);
   const commitFiles = useStore((s) => s.commitFiles);
   const toggleCommitExpand = useStore((s) => s.toggleCommitExpand);
@@ -276,46 +264,38 @@ function GraphList({
     <div className="graph-list">
       {commits.map((c, i) => {
         const row = layout.rows[i];
-        const selected =
-          selection?.kind === 'commit' &&
-          selection.repo === repo.info.root &&
-          selection.hash === c.hash;
+        // 展开的提交行高亮（点击行 = 展开/收起文件列表）
+        const selected = expandedCommit === c.hash;
 
         return (
           <Fragment key={c.hash}>
             <div
               className={`graph-row${selected ? ' selected' : ''}`}
               data-hash={c.hash}
-              title={`${c.shortHash} ${c.subject}`}
+              title={`${c.shortHash}  ${c.author}  ${formatRelativeTime(c.timestamp)}  ${c.subject}`}
               onClick={() => {
-                // 展开提交内的文件列表，同时右侧继续显示整个提交 patch
+                // 仅展开/收起提交内的文件列表（右侧 diff 只在点击文件时显示）
                 void toggleCommitExpand(repo.info.root, c.hash);
-                void selectCommit(repo.info.root, c.hash, c.subject);
               }}
             >
               <GraphSvg row={row} width={svgWidth} />
               <div className="graph-main">
-                <div className="graph-line1">
-                  <span className="graph-subject">{c.subject}</span>
-                  {showRepoName && (
-                    <span className="graph-commit-repo">{repo.info.name}</span>
-                  )}
-                  {c.refs.map((r) => {
-                    const label = prettyRef(r);
-                    return (
-                      <span
-                        key={r}
-                        className={`ref-badge${isRemoteRef(label) ? ' remote' : ''}`}
-                      >
-                        {label}
-                      </span>
-                    );
-                  })}
-                </div>
-                <div className="graph-line2">
+                <span className="graph-subject">{c.subject}</span>
+                {c.refs.map((r) => {
+                  const label = prettyRef(r);
+                  return (
+                    <span
+                      key={r}
+                      className={`ref-badge${isRemoteRef(label) ? ' remote' : ''}`}
+                    >
+                      {label}
+                    </span>
+                  );
+                })}
+                {/* 行尾：作者（单行布局，margin-left: auto 推到最右侧） */}
+                <span className="graph-commit-meta">
                   <span className="graph-author">{c.author}</span>
-                  <span className="graph-time">{formatRelativeTime(c.timestamp)}</span>
-                </div>
+                </span>
               </div>
             </div>
             {expandedCommit === c.hash && (
@@ -339,7 +319,11 @@ function GraphList({
                     >
                       <i className="codicon codicon-file" />
                       <span className="graph-file-name">{name}</span>
-                      {dir && <span className="graph-file-dir">{dir.replace(/\/$/, '')}</span>}
+                      {/* 仓库名 • 路径（灰色小字，无路径时只显示仓库名） */}
+                      <span className="graph-file-desc">
+                        {repo.info.name}
+                        {dir ? ` • ${dir.replace(/\/$/, '')}` : ''}
+                      </span>
                       <span className={`change-status ${statusColorClass(f.status)}`}>
                         {f.status}
                       </span>
@@ -390,14 +374,14 @@ function GraphSvg({ row, width }: { row: GraphRow; width: number }) {
           x2={x(i)}
           y2={H / 2}
           stroke={laneColor(i)}
-          strokeWidth={1.6}
+          strokeWidth={1.2}
         />,
       );
     } else if (row.mergesIn.includes(i)) {
       // 兄弟 lane 汇入本节点（对照 git log --graph 的收敛线）
       const d = `M ${x(i)} 0 C ${x(i)} ${H / 4}, ${x(row.lane)} ${H / 4}, ${x(row.lane)} ${H / 2}`;
       els.push(
-        <path key={`m${i}`} d={d} fill="none" stroke={laneColor(i)} strokeWidth={1.6} />,
+        <path key={`m${i}`} d={d} fill="none" stroke={laneColor(i)} strokeWidth={1.2} />,
       );
     } else if (row.bottom[i] === hash) {
       els.push(
@@ -408,7 +392,7 @@ function GraphSvg({ row, width }: { row: GraphRow; width: number }) {
           x2={x(i)}
           y2={H}
           stroke={laneColor(i)}
-          strokeWidth={1.6}
+          strokeWidth={1.2}
         />,
       );
     }
@@ -428,7 +412,7 @@ function GraphSvg({ row, width }: { row: GraphRow; width: number }) {
           x2={x(i)}
           y2={H}
           stroke={laneColor(i)}
-          strokeWidth={1.6}
+          strokeWidth={1.2}
         />,
       );
     } else if (row.top[i] !== hash && row.parents.includes(hash)) {
@@ -439,15 +423,27 @@ function GraphSvg({ row, width }: { row: GraphRow; width: number }) {
           d={d}
           fill="none"
           stroke={laneColor(i)}
-          strokeWidth={1.6}
+          strokeWidth={1.2}
         />,
       );
     }
   });
 
-  // 节点圆
+  // 节点圆：merge 提交（多父）为空心圆环，普通提交为实心小圆（对照 VS Code 图表）
   els.push(
-    <circle key="node" cx={x(row.lane)} cy={H / 2} r={3.6} fill={laneColor(row.lane)} />,
+    row.parents.length > 1 ? (
+      <circle
+        key="node"
+        cx={x(row.lane)}
+        cy={H / 2}
+        r={3.2}
+        style={{ fill: 'var(--bg-sidebar)' }}
+        stroke={laneColor(row.lane)}
+        strokeWidth={1.6}
+      />
+    ) : (
+      <circle key="node" cx={x(row.lane)} cy={H / 2} r={2.8} fill={laneColor(row.lane)} />
+    ),
   );
 
   return (

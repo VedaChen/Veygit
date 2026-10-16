@@ -177,7 +177,7 @@ export const GRAPH_PALETTE = [
 ];
 
 export const GRAPH_LANE_WIDTH = 14;
-export const GRAPH_ROW_HEIGHT = 40;
+export const GRAPH_ROW_HEIGHT = 22;
 
 export interface GraphRow {
   hash: string;

@@ -119,7 +119,7 @@ export function ChangesSection() {
               <ChangeGroup
                 repo={repo}
                 id="working"
-                title="更改"
+                title="已跟踪的更改"
                 changes={status.workingTreeChanges}
                 mode={viewMode}
               />

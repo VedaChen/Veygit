@@ -178,11 +178,23 @@ i.codicon {
   margin-top: 2px;
 }
 
+/* 区块之间更明显的分隔：间距 + 细分割线 */
+.section + .section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
 .section-header {
   display: flex;
   align-items: center;
-  height: 22px;
+  height: 28px;
   padding-right: 8px;
+  border-radius: 4px;
+}
+
+.section-header:hover {
+  background: var(--bg-hover);
 }
 
 .section-toggle {
@@ -204,6 +216,7 @@ i.codicon {
 }
 
 .section-title {
+  font-size: 14px;
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -853,8 +866,7 @@ i.codicon {
 .graph-row {
   display: flex;
   align-items: center;
-  height: 40px;
-  padding-right: 8px;
+  height: 22px; /* 与 SVG 行高（GRAPH_ROW_HEIGHT = 22）一致，紧凑对齐 VS Code */
   cursor: pointer;
   overflow: hidden;
 }
@@ -871,24 +883,23 @@ i.codicon {
   flex-shrink: 0;
 }
 
+/* 提交行内容区：单行 flex（subject/refs 之后的内容靠 margin-left: auto 推到行尾） */
 .graph-main {
-  flex: 1;
-  min-width: 0;
-  padding-left: 4px;
-}
-
-.graph-line1 {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  flex: 1;
   min-width: 0;
+  padding-right: 8px;
 }
 
 .graph-subject {
+  flex: 1; /* 占满可用空间：长描述截断点自动“往前靠近”右侧元素（对照 VS Code） */
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .ref-badge {
@@ -905,23 +916,21 @@ i.codicon {
   background: var(--badge-bg);
 }
 
-.graph-line2 {
+/* 行尾“作者”（固定贴右：subject 占满中间空间后，refs/作者整体在右端） */
+.graph-commit-meta {
+  margin-left: auto;
   display: flex;
   gap: 8px;
-  margin-top: 1px;
-  color: var(--fg-dim);
-  font-size: 11px;
-  min-width: 0;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .graph-author {
+  color: var(--fg-dim);
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.graph-time {
-  flex-shrink: 0;
 }
 
 /* ---------- Diff 视图 ---------- */
@@ -1247,7 +1256,7 @@ i.codicon {
   border-radius: 4px;
   color: var(--fg);
   font-size: 12px;
-  max-width: 110px;
+  max-width: 140px;
   min-width: 0; /* 允许收缩：配合 .section-actions 的 min-width: 0，空间不足时文字出省略号 */
 }
 
@@ -1263,13 +1272,6 @@ i.codicon {
 
 .graph-select-btn .codicon-chevron-down {
   font-size: 12px;
-}
-
-/* 提交行上的仓库名（灰色小字，tree 模式用于标注来源存储库） */
-.graph-commit-repo {
-  color: var(--fg-dim);
-  font-size: 11px;
-  flex-shrink: 0;
 }
 
 /* tree 模式：按存储库分组的提交列表 */
@@ -1322,7 +1324,8 @@ i.codicon {
   white-space: nowrap;
 }
 
-.graph-file-dir {
+/* 展开文件行的描述：仓库名 • 路径（灰色小字，行尾留状态字母） */
+.graph-file-desc {
   color: var(--fg-dim);
   font-size: 11px;
   overflow: hidden;
@@ -1530,4 +1533,57 @@ i.codicon {
 
 .output-body::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-hover);
+}
+
+/* ---------- 自绘标题栏 ---------- */
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+
+.titlebar-logo {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.titlebar-controls {
+  display: flex;
+  height: 100%;
+}
+
+.titlebar-btn {
+  width: 44px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.titlebar-btn:hover {
+  background: var(--hover-overlay);
+}
+
+.titlebar-btn.close:hover {
+  background: #e81123;
+  color: #ffffff;
 }

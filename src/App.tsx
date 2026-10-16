@@ -9,6 +9,7 @@ import { BranchPicker } from './components/BranchPicker';
 import { SettingsPanel } from './components/SettingsPanel';
 import { PromptHost } from './components/PromptHost';
 import { OutputPanel } from './components/OutputPanel';
+import { TitleBar } from './components/TitleBar';
 
 export default function App() {
   const appearance = useStore((s) => s.appearance);
@@ -40,6 +41,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <TitleBar />
       <div className="body">
         <Sidebar />
         <div

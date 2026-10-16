@@ -143,10 +143,6 @@ function DiffView({
   return (
     <div className="diff-view">
       <div className="tab-bar">
-        <div className="tab" title={path}>
-          <i className="codicon codicon-file" />
-          <span className="tab-name">{name}</span>
-        </div>
         <div className="tab active" title={path}>
           <i className="codicon codicon-file" />
           <span className="tab-name">{`${name} (${rightLabel})`}</span>
